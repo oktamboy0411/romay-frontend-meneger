@@ -24,6 +24,10 @@ export const AppRouter = () => {
       <Route path="dashboard" element={<PrivateRoute />}>
         <Route index element={<DashboardPage />} />
       </Route>
+      <Route path="clients" element={<PrivateRoute />}>
+        <Route index element={<Clients />} />
+      </Route>
+
       <Route path="birthday" element={<PrivateRoute />}>
         <Route index element={<BirthdayPage />}></Route>
       </Route>
@@ -35,12 +39,6 @@ export const AppRouter = () => {
       </Route>
       <Route path="history">
         <Route index element={<History />} />
-      </Route>
-      <Route path="clients">
-        <Route index element={<Clients />} />
-      </Route>
-      <Route path="clients">
-        <Route index element={<Clients />} />
       </Route>
       <Route path="suppliers" element={<PrivateRoute />}>
         <Route index element={<Suppliers />}></Route>

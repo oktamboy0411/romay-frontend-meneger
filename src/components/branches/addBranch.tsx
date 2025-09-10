@@ -130,7 +130,9 @@ export const AddBranchModal = ({
           <div className="space-y-2">
             <Label>Menejer</Label>
             <Select
-              onValueChange={(value) => form.setValue('manager_ids', [value])}
+              onValueChange={(value: string) =>
+                form.setValue('manager_ids', [value])
+              }
               value={form.watch('manager_ids')?.[0] || ''}
             >
               <SelectTrigger className="w-full">

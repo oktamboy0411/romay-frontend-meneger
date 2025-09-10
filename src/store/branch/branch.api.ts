@@ -16,7 +16,7 @@ export const branchApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['branches'],
+      invalidatesTags: ['branch'],
     }),
     updateBranch: builder.mutation<UpdateBranchResponse, UpdateBranchRequest>({
       query: ({ id, body }) => ({
@@ -24,7 +24,7 @@ export const branchApi = baseApi.injectEndpoints({
         method: 'PUT',
         body: body,
       }),
-      invalidatesTags: ['branches'],
+      invalidatesTags: ['branch'],
     }),
     getAllBranches: builder.query<GetBranchesResponse, GetBranchesRequest>({
       query: ({ search, page, limit }) => ({
@@ -36,14 +36,14 @@ export const branchApi = baseApi.injectEndpoints({
           limit,
         },
       }),
-      providesTags: ['branches'],
+      providesTags: ['branch'],
     }),
     deleteBranch: builder.mutation<void, string>({
       query: (id) => ({
         url: `/branch/delete/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['branches'],
+      invalidatesTags: ['branch'],
     }),
   }),
 })

@@ -35,6 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 
 const HIDE_SIDEBAR_ROUTES = ['/auth/login']
 
@@ -130,26 +131,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 {/* <span className="text-sm text-muted-foreground">({role})</span> */}
               </div>
             </div>
-            <div className="flex gap-4">
-              <Calendar22 />
-              <Select
-                onValueChange={(value) => {
-                  setSelectedBranch(value)
-                }}
-                value={selectedBranch}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Barch Filiallar" />
-                </SelectTrigger>
-                <SelectContent>
-                  {branches?.map((branch) => (
-                    <SelectItem key={branch._id} value={branch._id}>
-                      {branch.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="flex gap-4 w-full justify-start"></div>
           </div>
         </header>
         <main className="px-6 py-20">{children}</main>

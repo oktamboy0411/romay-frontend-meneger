@@ -16,7 +16,7 @@ const baseApi = createApi({
   }),
   tagTypes: [
     'user',
-    'branches',
+    'branch',
     'birthdays',
     'employees',
     'history',

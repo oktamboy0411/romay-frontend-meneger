@@ -8,12 +8,11 @@ import {
 } from '@/components/ui/select'
 import { useGetClientsQuery } from '@/store/clients/clients.api'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
-import { AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useGetRole } from '@/hooks/use-get-role'
-import { CheckRole } from '@/utils/checkRole'
+import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
 import AddClientDialog from './AddClientDialog'
+import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
+import { Input } from '@/components/ui/input'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -36,13 +35,25 @@ function BalanceCell({ value }: { value: number }) {
 }
 
 function Clients() {
+  const [search, setSearch] = useState('')
+  const [branch, setBranch] = useState('all')
+
+  const queryParams = {
+    search,
+    ...(branch !== 'all' && { branch_id: branch }),
+  }
+
   const {
     data: { data: clientsData = [] } = {},
     isLoading,
     isError,
-  } = useGetClientsQuery({})
+  } = useGetClientsQuery(queryParams)
 
-  const role = useGetRole()
+  const {
+    data: { data: branchesData = [] } = {},
+    isLoading: isLoadingBranches,
+    isError: isErrorBranches,
+  } = useGetAllBranchesQuery({})
 
   const [open, setOpen] = useState(false)
   return (
@@ -50,21 +61,38 @@ function Clients() {
       <div className="flex justify-between items-center">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Mijozlar</h1>
         <div className="flex gap-3">
-          <Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              className="pl-9 w-[300px]"
+              placeholder="mijozni izlash"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Select value={branch} onValueChange={setBranch}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Barcha filiallar" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Barchasi</SelectItem>
-              <SelectItem value="termiz">Termiz</SelectItem>
-              <SelectItem value="shahrisabz">Shahrisabz</SelectItem>
+              {isLoadingBranches ? (
+                <SelectItem disabled value="loading">
+                  Yuklanmoqda...
+                </SelectItem>
+              ) : isErrorBranches ? (
+                <SelectItem disabled value="error">
+                  Xatolik yuz berdi
+                </SelectItem>
+              ) : (
+                branchesData.map((branch) => (
+                  <SelectItem key={branch._id} value={branch._id}>
+                    {branch.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
-          {CheckRole(role, ['manager']) && (
-            <Button onClick={() => setOpen(true)} variant="default">
-              Mijoz qo'shish
-            </Button>
-          )}
         </div>
       </div>
 
@@ -97,30 +125,24 @@ function Clients() {
                   Telefon raqami
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Segment</th>
-                <th className="px-6 py-3 text-left font-medium">Balans</th>
+                <th className="px-6 py-3 text-left font-medium">Qarz</th>
                 <th className="px-6 py-3 text-center font-medium">
-                  Buyurtmalar soni
+                  mijoz toifasi
                 </th>
                 <th className="px-6 py-3 text-center font-medium">Filial</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {clientsData?.map((c) => (
-                <tr
-                  key={c.id}
-                  className="hover:bg-[#F9F9F9] cursor-pointer"
-                  onClick={() =>
-                    (window.location.href = `/ceo/customers/customer-detail/${c.id}`)
-                  }
-                >
+                <tr key={c.id} className="hover:bg-[#F9F9F9] cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
                       <Link
-                        to={`/manager/clients/${c.id}`}
+                        to={`/clients/${c._id}`}
                         className="hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {c.name}
+                        {c.username}
                       </Link>
                     </div>
                   </td>
@@ -136,17 +158,17 @@ function Clients() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm">
-                      <BalanceCell value={c.balance} />
+                      <BalanceCell value={c.debt.amount || 0} />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {c.orders || 0}
+                      {c.customer_tier || "Noma'lum"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {c.branch?.name || "Noma'lum"}
+                      {c.branch_id?.name || "Noma'lum"}
                     </div>
                   </td>
                 </tr>
