@@ -25,6 +25,7 @@ const baseApi = createApi({
     'products',
     'mechanics',
     'services',
+    'masters',
   ],
   endpoints: () => ({}),
 })

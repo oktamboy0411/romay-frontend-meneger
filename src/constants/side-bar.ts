@@ -2,20 +2,12 @@
 // sidebar-groups.ts
 import {
   LayoutGrid,
-  Flame,
-  Gift,
-  Network,
-  Locate,
-  History,
   UserRound,
   Contact,
   SquareCheckBig,
   Package,
   CircleArrowOutUpRight,
   Wrench,
-  Store,
-  Import,
-  Upload,
 } from 'lucide-react'
 
 export type Role =
@@ -46,9 +38,9 @@ export const getSidebarGroups = (): SidebarGroup[] => {
       label: 'Mijozlar va xodimlar',
       items: [
         { title: 'Sotuvchilar', icon: UserRound, url: '/sellers' },
-        { title: 'Mijozlar', icon: UserRound, url: '/clients' },
         { title: 'Kassirlar', icon: UserRound, url: '/cashiers' },
-        { title: 'Ustalar', icon: UserRound, url: '/masters' },
+        { title: 'Mijozlar', icon: Contact, url: '/clients' },
+        { title: 'Ustalar', icon: Contact, url: '/masters' },
       ],
     },
     {

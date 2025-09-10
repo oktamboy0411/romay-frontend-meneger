@@ -18,17 +18,21 @@ export interface ClientRequest {
   limit?: number
 }
 
-export interface AddClientResponse {}
+export interface AddClientResponse {
+  fullName: string
+  phone: string
+  work_type: string
+  branch_id: string
+}
 
 export interface AddClientRequest {
   username: string
-  description: string
+  description?: string | undefined
   phone: string
-  profession: string
-  birth_date: string
+  profession?: string | undefined
+  birth_date?: string | undefined
   branch_id: string
-  address: string
-  address: string
+  address?: string | undefined
 }
 
 export interface UpdateClientResponse {}
