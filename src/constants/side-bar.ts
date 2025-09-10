@@ -36,147 +36,30 @@ export interface SidebarGroup {
   items: SidebarItem[]
 }
 
-export const getSidebarGroups = (role: Role): SidebarGroup[] => {
-  switch (role) {
-    case 'ceo':
-      return [
-        {
-          label: 'Asosiy',
-          items: [
-            { title: 'Dashboard', icon: LayoutGrid, url: '/dashboard' },
-            { title: 'KPI tizimi', icon: Flame, url: '/kpi' },
-            { title: "Tug'ilgan kun", icon: Gift, url: '/birthday' },
-          ],
-        },
-        {
-          label: 'Xodimlar bloki',
-          items: [
-            { title: 'Boshqaruv', icon: Network, url: '/management' },
-            { title: 'Filiallar', icon: Locate, url: '/branches' },
-            {
-              title: "O'zgaruvchilar tarixi",
-              icon: History,
-              url: '/history',
-            },
-          ],
-        },
-        {
-          label: 'Mijozlar bloki',
-          items: [
-            { title: 'Mijozlar', icon: UserRound, url: '/clients' },
-            { title: "Ta'minotchilar", icon: Contact, url: '/suppliers' },
-            { title: 'Buyurtmalar', icon: SquareCheckBig, url: '/orders' },
-            { title: 'Mahsulotlar', icon: Package, url: '/products' },
-            {
-              title: 'Ijaralar',
-              icon: CircleArrowOutUpRight,
-              url: '/rents',
-            },
-            { title: "Ta'mirlash", icon: Wrench, url: '/repairs' },
-          ],
-        },
-      ]
-
-    case 'manager':
-      return [
-        {
-          label: 'Asosiy',
-          items: [{ title: 'Dashboard', icon: LayoutGrid, url: '/dashboard' }],
-        },
-        {
-          label: 'Mijozlar bloki',
-          items: [
-            { title: 'Mijozlar', icon: UserRound, url: '/clients' },
-            {
-              title: "Ta'minotchilar",
-              icon: Contact,
-              url: '/suppliers',
-            },
-            {
-              title: 'Buyurtmalar',
-              icon: SquareCheckBig,
-              url: '/orders',
-            },
-            { title: 'Mahsulotlar', icon: Package, url: '/products' },
-            {
-              title: 'Ijaralar',
-              icon: CircleArrowOutUpRight,
-              url: '/rents',
-            },
-            { title: "Ta'mirlash", icon: Wrench, url: '/repairs' },
-          ],
-        },
-      ]
-
-    case 'sale_cashier':
-      return [
-        {
-          label: 'Asosiy',
-          items: [
-            { title: 'Sotuv', icon: Store, url: '/selling' },
-            { title: 'Qabul qilish', icon: Import, url: '/accept' },
-          ],
-        },
-        {
-          label: "Ma'lumotlar",
-          items: [
-            { title: 'Mijozlar', icon: UserRound, url: '/clients' },
-            { title: 'Buyurtmalar', icon: SquareCheckBig, url: '/orders' },
-            { title: 'Mahsulotlar', icon: Package, url: '/products' },
-          ],
-        },
-      ]
-
-    case 'rent_cashier':
-      return [
-        {
-          label: 'Asosiy',
-          items: [
-            { title: 'Ijara', icon: CircleArrowOutUpRight, url: '/rents' },
-            { title: 'Qabul qilish', icon: Import, url: '/accept' },
-          ],
-        },
-        {
-          label: "Ma'lumotlar",
-          items: [
-            { title: 'Mijozlar', icon: UserRound, url: '/clients' },
-            { title: 'Buyurtmalar', icon: SquareCheckBig, url: '/orders' },
-            { title: 'Mahsulotlar', icon: Package, url: '/products' },
-            { title: "Ta'mirlash", icon: Wrench, url: '/repairs' },
-          ],
-        },
-      ]
-
-    case 'storekeeper':
-    default:
-      return [
-        {
-          label: 'Asosiy',
-          items: [
-            {
-              title: 'Dashboard',
-              icon: LayoutGrid,
-              url: '/dashboard',
-            },
-            { title: 'Qabul qilish', icon: Import, url: '/accept' },
-            {
-              title: 'Filialga berish',
-              icon: Upload,
-              url: '/branch-give',
-            },
-          ],
-        },
-        {
-          label: "Ma'lumotlar",
-          items: [
-            {
-              title: "Ta'minotchilar",
-              icon: Contact,
-              url: '/suppliers',
-            },
-            { title: 'Mahsulotlar', icon: Package, url: '/products' },
-          ],
-        },
-      ]
-  }
+export const getSidebarGroups = (): SidebarGroup[] => {
+  return [
+    {
+      label: 'Asosiy',
+      items: [{ title: 'Dashboard', icon: LayoutGrid, url: '/dashboard' }],
+    },
+    {
+      label: 'Mijozlar va xodimlar',
+      items: [
+        { title: 'Sotuvchilar', icon: UserRound, url: '/sellers' },
+        { title: 'Mijozlar', icon: UserRound, url: '/clients' },
+        { title: 'Kassirlar', icon: UserRound, url: '/cashiers' },
+        { title: 'Ustalar', icon: UserRound, url: '/masters' },
+      ],
+    },
+    {
+      label: 'Operatsiyalar',
+      items: [
+        { title: 'Sotuvlar', icon: SquareCheckBig, url: '/sales' },
+        { title: 'Sotuv Mahsulotlar', icon: Package, url: '/sale-products' },
+        { title: 'Ijara Mahsulotlar', icon: Package, url: '/rent-products' },
+        { title: 'Ijaralar', icon: CircleArrowOutUpRight, url: '/rents' },
+        { title: "Ta'mirlash", icon: Wrench, url: '/repairs' },
+      ],
+    },
+  ]
 }

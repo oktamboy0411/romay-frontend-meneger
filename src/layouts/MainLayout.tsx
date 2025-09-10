@@ -1,11 +1,3 @@
-import { Calendar22 } from '@/components/calendar'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import {
   Sidebar,
@@ -23,10 +15,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { getSidebarGroups } from '@/constants/side-bar'
-import { useGetRole } from '@/hooks/use-get-role'
 import { Link, useLocation } from 'react-router-dom'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { useState } from 'react'
 import { User2 } from 'lucide-react'
 import { ChevronUp } from 'lucide-react'
 import {
@@ -35,18 +24,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
 
 const HIDE_SIDEBAR_ROUTES = ['/auth/login']
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  const role = useGetRole()
-  const groups = getSidebarGroups(role)
-  const { data: { data: branches } = {} } = useGetAllBranchesQuery(
-    {},
-    { skip: role !== 'ceo' }
-  )
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
+  const groups = getSidebarGroups()
+
   const { pathname } = useLocation()
 
   const hideSidebar = HIDE_SIDEBAR_ROUTES.includes(pathname)

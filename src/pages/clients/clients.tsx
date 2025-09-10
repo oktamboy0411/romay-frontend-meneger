@@ -13,6 +13,7 @@ import { useState } from 'react'
 import AddClientDialog from './AddClientDialog'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { Input } from '@/components/ui/input'
+import { PaginationComponent } from '@/components/pagination'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -37,14 +38,16 @@ function BalanceCell({ value }: { value: number }) {
 function Clients() {
   const [search, setSearch] = useState('')
   const [branch, setBranch] = useState('all')
+  const [page, setPage] = useState(1)
 
   const queryParams = {
     search,
     ...(branch !== 'all' && { branch_id: branch }),
+    page,
   }
 
   const {
-    data: { data: clientsData = [] } = {},
+    data: { data: clientsData = [], pagination } = {},
     isLoading,
     isError,
   } = useGetClientsQuery(queryParams)
@@ -177,6 +180,13 @@ function Clients() {
           </table>
         </div>
       )}
+
+      <PaginationComponent
+        currentPage={page}
+        onPageChange={setPage}
+        totalPages={pagination?.total_pages || 1}
+      />
+
       <AddClientDialog open={open} setOpen={setOpen} />
     </div>
   )
