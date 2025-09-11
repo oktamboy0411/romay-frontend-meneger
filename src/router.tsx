@@ -6,6 +6,7 @@ import Clients from './pages/clients/clients'
 import Repairs from './pages/repairs/repairs'
 import Cashiers from './pages/cashiers/cashiers'
 import Assistants from './pages/asistant/asistant'
+import Sales from './pages/sales/sales'
 
 export const AppRouter = () => {
   return (
@@ -25,6 +26,9 @@ export const AppRouter = () => {
       </Route>
       <Route path="cashiers" element={<PrivateRoute />}>
         <Route index element={<Cashiers />} />
+      </Route>
+      <Route path="sales" element={<PrivateRoute />}>
+        <Route index element={<Sales />} />
       </Route>
 
       <Route path="repairs" element={<PrivateRoute />}>

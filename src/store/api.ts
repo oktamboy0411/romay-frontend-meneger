@@ -31,6 +31,7 @@ const baseApi = createApi({
     'permissions',
     'notifications',
     'settings',
+    'sales',
   ],
   endpoints: () => ({}),
 })

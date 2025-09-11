@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import {
   Select,
   SelectContent,
@@ -6,35 +5,72 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useGetSalesQuery } from '@/store/sales/sales.api' // 🔹 SALES API
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
-import AddClientDialog from './AddCashierDialog'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
-import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
+import SaleDetailsDialog from './AddSalesDialog'
+import type { Sale } from '@/store/sales/types'
 
-function Cashiers() {
+function BalanceCell({ value }: { value: number }) {
+  const isZero = value === 0
+  const isNegative = value < 0
+  const formatted =
+    (isNegative ? '-' : '') + Math.abs(value).toLocaleString('uz-UZ') + " so'm"
+  return (
+    <span
+      className={
+        isZero
+          ? 'text-emerald-600'
+          : isNegative
+            ? 'text-rose-600'
+            : 'text-emerald-600'
+      }
+    >
+      {isZero ? "0 so'm" : formatted}
+    </span>
+  )
+}
+
+function Sales() {
   const [search, setSearch] = useState('')
   const [branch, setBranch] = useState('all')
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState(false)
+  const [selectedSale, setSelectedSale] = useState<Sale | null>({
+    _id: 'string',
+    branch_id: 'string',
+    cashier_id: 'string',
+    client_id: 'string',
+    items: [],
+    status: 'PENDING',
+    payments: {
+      total_amount: 0,
+      paid_amount: 0,
+      debt_amount: 0,
+      type: '',
+      currency: '',
+      _id: '',
+    },
+    created_at: '',
+    updated_at: '',
+  })
 
-  // Query parametrlari
   const queryParams = {
     search,
     ...(branch !== 'all' && { branch_id: branch }),
     page,
   }
 
-  // Mijozlar API
   const {
-    data: { data: clientsData = [], pagination } = {},
+    data: { data: salesData = [], pagination } = {},
     isLoading,
     isError,
-  } = useGetCashiersQuery(queryParams)
+  } = useGetSalesQuery(queryParams)
 
   const {
     data: { data: branchesData = [] } = {},
@@ -44,22 +80,18 @@ function Cashiers() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-[30px] font-semibold text-[#09090B]">Kasserlar</h1>
+        <h1 className="text-[30px] font-semibold text-[#09090B]">Savdolar</h1>
         <div className="flex gap-3">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               className="pl-9 w-[300px]"
-              placeholder="mijozni izlash"
+              placeholder="savdoni izlash"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-          {/* Branch select */}
           <Select value={branch} onValueChange={setBranch}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Barcha filiallar" />
@@ -83,32 +115,26 @@ function Cashiers() {
               )}
             </SelectContent>
           </Select>
-
-          {/* Add new cashier */}
-          <Button onClick={() => setOpen(true)} className="py-5">
-            Yangi kasser qo'shish
-          </Button>
         </div>
       </div>
 
-      {/* Table */}
       {isLoading ? (
-        <TableSkeleton rows={5} columns={6} />
+        <TableSkeleton rows={5} columns={7} />
       ) : isError ? (
         <div className="border border-red-200 rounded-lg p-6 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-red-500" />
           <p className="text-red-600 text-lg">Xatolik yuz berdi</p>
           <p className="text-gray-600">
-            Mijozlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib
+            Savdolarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib
             ko'ring.
           </p>
         </div>
-      ) : clientsData.length === 0 ? (
+      ) : salesData.length === 0 ? (
         <div className="border border-[#E4E4E7] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="text-lg text-gray-600">Mijozlar topilmadi</p>
+          <p className="text-lg text-gray-600">Savdolar topilmadi</p>
           <p className="text-gray-500">
-            Hozircha hech qanday mijoz mavjud emas
+            Hozircha hech qanday savdo mavjud emas
           </p>
         </div>
       ) : (
@@ -116,57 +142,57 @@ function Cashiers() {
           <table className="w-full">
             <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
               <tr>
-                <th className="px-6 py-3 text-left font-medium">Ismi</th>
-                <th className="px-6 py-3 text-left font-medium">
-                  Telefon raqami
-                </th>
-                <th className="px-6 py-3 text-left font-medium">Manzil</th>
+                <th className="px-6 py-3 text-left font-medium">Mijoz</th>
+                <th className="px-6 py-3 text-left font-medium">Telefon</th>
+                <th className="px-6 py-3 text-left font-medium">Kassir</th>
                 <th className="px-6 py-3 text-left font-medium">Filial</th>
-                <th className="px-6 py-3 text-left font-medium">Roli</th>
+                <th className="px-6 py-3 text-left font-medium">Status</th>
+                <th className="px-6 py-3 text-left font-medium">Qarz</th>
+                <th className="px-6 py-3 text-left font-medium">
+                  Umumiy summa
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
-              {clientsData?.map((c) => (
-                <tr key={c._id} className="hover:bg-[#F9F9F9] cursor-pointer">
-                  {/* Name */}
+              {salesData?.map((s) => (
+                <tr key={s._id} className="hover:bg-[#F9F9F9] cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
-                      <Link
-                        to={`/clients/${c._id}`}
+                      <b
                         className="hover:underline"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedSale(s)
+                          setOpen(true)
+                        }}
                       >
-                        {c.username}
-                      </Link>
+                        {s.client_id?.username || "Noma'lum"}
+                      </b>
                     </div>
                   </td>
-
-                  {/* Phone */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {c.phone || 'Mavjud emas'}
+                      {s.client_id?.phone || 'Mavjud emas'}
                     </div>
                   </td>
-
-                  {/* Address */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {c.address || 'Mavjud emas'}
+                      {s.cashier_id?.username || 'Mavjud emas'}
                     </div>
                   </td>
-
-                  {/* Branch */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {c.branch_id?.name || "Noma'lum"}
+                      {s.branch_id?.name || "Noma'lum"}
                     </div>
                   </td>
-
-                  {/* Role */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#18181B]">
-                      {c.role || "Noma'lum"}
-                    </div>
+                    <div className="text-sm text-[#18181B]">{s.status}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <BalanceCell value={s.payments?.debt_amount || 0} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <BalanceCell value={s.payments?.total_amount || 0} />
                   </td>
                 </tr>
               ))}
@@ -175,16 +201,19 @@ function Cashiers() {
         </div>
       )}
 
-      {/* Pagination */}
       <PaginationComponent
         currentPage={page}
         onPageChange={setPage}
         totalPages={pagination?.total_pages || 1}
       />
 
-      <AddClientDialog open={open} setOpen={setOpen} />
+      <SaleDetailsDialog
+        open={open}
+        setOpen={setOpen}
+        saleData={selectedSale}
+      />
     </div>
   )
 }
 
-export default Cashiers
+export default Sales

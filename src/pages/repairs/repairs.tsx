@@ -8,8 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { useGetAllServicesQuery } from '@/store/service/service.api'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { useGetAllMechanicsQuery } from '@/store/mechanic/mechanic.api'
@@ -329,15 +327,6 @@ function ServicesTable() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex gap-4">
-          {CheckRole(userRole, ['manager', 'rent_cashier']) && (
-            <Button
-              className="bg-[#3B82F6] hover:bg-[#2563EB] text-white"
-              onClick={() => navigate('/new-repair')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Xizmat qo'shish
-            </Button>
-          )}
           <Select value={selectedStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Holatni tanlang" />
