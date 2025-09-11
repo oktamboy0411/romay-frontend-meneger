@@ -12,7 +12,6 @@ import { useState } from 'react'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
-import { Button } from '@/components/ui/button'
 import SaleDetailsDialog from './AddSalesDialog'
 import type { Sale } from '@/store/sales/types'
 
