@@ -1,5 +1,5 @@
 import baseApi from '../api'
-import { setAuthTokens, clearAuthTokens } from '@/utils/auth'
+import { setAuthTokens } from '@/utils/auth'
 import type { LoginRequest, LoginResponse, UserResponse } from './auth'
 
 type ApiError = {
