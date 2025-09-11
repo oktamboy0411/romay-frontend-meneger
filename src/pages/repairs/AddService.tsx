@@ -35,7 +35,7 @@ import { CheckRole } from '@/utils/checkRole'
 import { toast } from 'sonner'
 import ProductCard from '@/components/ProductCard'
 import ProductSearch from '@/components/ProductSearch'
-import type { Product, ProductWarehouseItem } from '@/store/product/types.d'
+import type { RentProduct, ProductWarehouseItem } from '@/store/product/types.d'
 
 // Service schema based on the image design
 const addServiceSchema = z.object({
@@ -95,12 +95,12 @@ export default function AddService() {
   })
 
   // Product handler functions
-  const handleProductSelect = (product: Product) => {
-    // Convert Product to ProductWarehouseItem
+  const handleProductSelect = (product: RentProduct) => {
+    // Convert RentProduct to ProductWarehouseItem
     const productWarehouseItem: ProductWarehouseItem = {
       _id: product._id,
-      product: product,
-      product_count: product.product_count,
+      product: product.product,
+      product_count: product.product_active_count,
       branch: product.branch,
     }
 
