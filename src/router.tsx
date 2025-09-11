@@ -7,9 +7,9 @@ import Repairs from './pages/repairs/repairs'
 import Cashiers from './pages/cashiers/cashiers'
 import Assistants from './pages/asistant/asistant'
 import Sales from './pages/sales/sales'
-import SaleProduct from './pages/sale-products/sale-product'
 import Rents from './pages/rents/rents'
 import AddRent from './pages/rents/AddRent'
+import ProductPage from './pages/products/products'
 
 export const AppRouter = () => {
   return (
@@ -33,9 +33,7 @@ export const AppRouter = () => {
       <Route path="sales" element={<PrivateRoute />}>
         <Route index element={<Sales />} />
       </Route>
-      <Route path="sale-products" element={<PrivateRoute />}>
-        <Route index element={<SaleProduct />} />
-      </Route>
+
       <Route path="rents" element={<PrivateRoute />}>
         <Route index element={<Rents />}></Route>
       </Route>
@@ -44,6 +42,9 @@ export const AppRouter = () => {
       </Route>
       <Route path="repairs" element={<PrivateRoute />}>
         <Route index element={<Repairs />} />
+      </Route>
+      <Route path="products" element={<PrivateRoute />}>
+        <Route index element={<ProductPage />}></Route>
       </Route>
     </Routes>
   )

@@ -46,8 +46,7 @@ export const getSidebarGroups = (): SidebarGroup[] => {
       label: 'Operatsiyalar',
       items: [
         { title: 'Sotuvlar', icon: SquareCheckBig, url: '/sales' },
-        { title: 'Sotuv Mahsulotlar', icon: Package, url: '/sale-products' },
-        { title: 'Ijara Mahsulotlar', icon: Package, url: '/rent-products' },
+        { title: 'Mahsulotlar', icon: Package, url: '/products' },
         { title: 'Ijaralar', icon: CircleArrowOutUpRight, url: '/rents' },
         { title: "Ta'mirlash", icon: Wrench, url: '/repairs' },
       ],

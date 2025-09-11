@@ -1,60 +1,72 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// ===== Request & Response types =====
 
-export interface ProductAttribute {
-  key: string
-  value: string
-  _id: string
+// Query parameters for GET ALL products
+export interface GetAllProductsRequest {
+  page?: number
+  limit?: number
+  search?: string
 }
 
-export interface Product {
-  _id: string
-  name: string
-  description: string
-  category_id: string | { _id: string; name: string }
-  price: number
-  status: string
-  currency: string
-  images: string[]
-  barcode: string
-  attributes: ProductAttribute[]
-  from_create: string
-  created_at: string
-  updated_at: string
-}
-
-export interface ProductWarehouseItem {
-  _id: string
-  product: Product
-  product_count: number
-  product_barcode: string
-  product_name: string
-  created_at: string
-  updated_at: string
-}
-
+// Response for GET ALL products
 export interface GetAllProductsResponse {
   success: boolean
   page_count: number
   current_page: number
   next_page: number | null
   after_filtering_count: number
-  data: ProductWarehouseItem[]
+  data: Product[]
 }
 
-export interface GetAllProductsRequest {}
-
-export interface CreateProductRequest {
+// Product type (common for sale & rent)
+export interface Product {
+  _id: string
+  branch: string
   name: string
-  description: string
+  description?: string
+  product_count: number
+  product_rent_price?: number // faqat rent products uchun
+  price?: number // faqat sale products uchun
   category_id: string
-  price: number
-  status: string
-  currency: string
   images: string[]
   barcode: string
-  attributes: ProductAttribute[]
-  product_count: number
-  from_create: string
+  currency?: string
+  attributes?: Array<{ key: string; value: string }>
+  created_at?: string
+  updated_at?: string
 }
 
-export interface CreateProductResponse {}
+// Create product request
+export interface CreateProductRequest {
+  branch: string
+  name: string
+  product_count: number
+  price?: number // sale products
+  product_rent_price?: number // rent products
+  description?: string
+  category_id: string
+  images: string[]
+  barcode: string
+  currency?: string
+  attributes?: Array<{ key: string; value: string }>
+}
+
+// Response for creating/updating product
+export interface CreateProductResponse {
+  success: boolean
+  msg?: string
+  data?: Product
+}
+
+// Update product request
+export interface UpdateProductRequest {
+  name?: string
+  product_count?: number
+  price?: number
+  product_rent_price?: number
+  description?: string
+  category_id?: string
+  images?: string[]
+  barcode?: string
+  currency?: string
+  attributes?: Array<{ key: string; value: string }>
+}

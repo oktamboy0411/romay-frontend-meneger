@@ -30,8 +30,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import {
-  useCreateSaleProductMutation,
-  useGetAllSaleProductsQuery,
+  useCreateRentProductMutation,
+  useGetAllRentProductsQuery,
 } from '@/store/product/product.api'
 import type { Product, CreateProductRequest } from '@/store/product/types'
 import { useGetAllCategoryQuery } from '@/store/category/category.api'
@@ -40,14 +40,12 @@ import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
 import { useGetRole } from '@/hooks/use-get-role'
 import { CheckRole } from '@/utils/checkRole'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import RentPage from './rents'
 
-function ProductPage() {
+function RentPage() {
   const [page, setPage] = useState(1)
-  const { data: getAllProductsData } = useGetAllSaleProductsQuery({ page })
+  const { data: getAllRentsData } = useGetAllRentProductsQuery({ page })
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
-  const [createProduct] = useCreateSaleProductMutation({})
+  const [createProduct] = useCreateRentProductMutation({})
   const [uploadFile] = useUploadFileMutation()
 
   const role = useGetRole()
@@ -129,11 +127,12 @@ function ProductPage() {
       }
 
       const newProduct: CreateProductRequest = {
+        // API expects branch and rent-specific field product_rent_price
         branch: '',
         name: values.name,
         description: values.note || 'Mahsulot tavsifi kiritilmagan',
         category_id: values.category,
-        price: Number(values.price),
+        product_rent_price: Number(values.price),
         currency: values.currency,
         images: imageUrl ? [imageUrl] : [],
         barcode: values.sku,
@@ -149,9 +148,11 @@ function ProductPage() {
       // Bu yerda error handling qo'shishingiz mumkin
     }
   }
+  console.log(getAllRentsData)
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         {/* Toolbar */}
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -162,7 +163,6 @@ function ProductPage() {
             <Filter className="h-4 w-4" /> Filter: Hammasi
           </Button>
         </div>
-
         <div className="flex items-center gap-3">
           <Select defaultValue="all">
             <SelectTrigger className="w-[150px]">
@@ -205,45 +205,43 @@ function ProductPage() {
           <table className="w-full">
             <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
               <tr>
-                <th className="px-6 py-3 text-left font-medium">nomi</th>
-                <th className="px-6 py-3 text-left font-medium">Status</th>
+                <th className="px-6 py-3 text-left font-medium">Mijoz</th>
+                <th className="px-6 py-3 text-left font-medium">Holati</th>
+                <th className="px-6 py-3 text-center font-medium">Filial</th>
                 <th className="px-6 py-3 text-center font-medium">
-                  Kategoriya
+                  Umumiy narx
                 </th>
-                <th className="px-6 py-3 text-center font-medium">Bar-kod</th>
-                <th className="px-6 py-3 text-center font-medium">Narxi</th>
-                <th className="px-6 py-3 text-center font-medium">Tasnifi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
-              {getAllProductsData?.data?.map((product) => (
+              {getAllRentsData?.data?.map((rent) => (
                 <tr
-                  key={product._id}
+                  key={rent._id}
                   className="hover:bg-[#F9F9F9]"
-                  onClick={() => handleProductClick(product)}
+                  onClick={() => handleProductClick(rent)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center">
-                        {product.images?.[0] ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="h-8 w-8 object-cover"
-                          />
-                        ) : (
-                          <span className="text-gray-400">📱</span>
-                        )}
+                      <div className="h-10 w-10 bg-gray-100 rounded flex items-center overflow-hidden justify-center">
+                        {/* <span className="text-gray-400">📱</span> */}
+                        <img
+                          src={rent.images?.[0]}
+                          alt={rent.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-[#18181B]">
-                          {product.name}
+                          {rent.name || "Noma'lum"}
                         </div>
+                        {/* <div className="text-xs text-gray-500">
+                          {rent.product.?.name || ''}
+                        </div> */}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    {product.product_count > 0 ? (
+                    {rent.product_count > 0 ? (
                       <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-700">
                         mavjud
                       </span>
@@ -254,28 +252,19 @@ function ProductPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
-                      {getCategoryName(product.category_id)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-md border border-[#E4E4E7] text-[#18181B]">
-                      {product.barcode}
-                    </span>
+                    {/* <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
+                      {rent.product.branch?.name || '—'}
+                    </span> */}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatUsd((product.price ?? '').toString())}
+                      {formatUsd(
+                        (
+                          (rent.product_rent_price ?? rent.price) ||
+                          ''
+                        ).toString()
+                      )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-[#09090B] hover:bg-gray-100"
-                    >
-                      {product.description}
-                    </Button>
                   </td>
                 </tr>
               ))}
@@ -284,36 +273,35 @@ function ProductPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {getAllProductsData?.data?.map((product, idx) => (
+          {getAllRentsData?.data?.map((rent, idx) => (
             <Card
-              key={`${product._id}-${idx}`}
+              key={`${rent._id}-${idx}`}
               className="overflow-hidden border border-[#E4E4E7] rounded-xl"
-              onClick={() => handleProductClick(product)}
+              onClick={() => handleProductClick(rent)}
             >
               <CardContent className="p-3">
                 <div className="w-full h-36 flex items-center justify-center">
                   <img
-                    src={
-                      product.images?.[0] ||
-                      'https://media.istockphoto.com/id/184639599/photo/power-drill-with-large-bit.jpg?s=612x612&w=0&k=20&c=TJczKvZqLmWc5c5O6r86jelaUbYFLCZnwA_uWlhHOG0='
-                    }
-                    alt={product.name}
+                    src={rent.images?.[0]}
+                    alt={rent.name}
                     className="max-h-full object-contain"
                   />
                 </div>
                 <div className="mt-3">
                   <span className="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-orange-50 text-orange-600 border border-orange-100">
-                    {getCategoryName(product.category_id)}
+                    {getCategoryName(rent.category_id)}
                   </span>
                 </div>
                 <div className="mt-2 text-base font-semibold leading-5 text-[#18181B] line-clamp-2">
-                  {product.name}
+                  {rent.name}
                 </div>
                 <div className="text-sm text-[#71717A] mt-1">
-                  {product.description || product.barcode || '—'}
+                  {rent.description || rent.barcode || '—'}
                 </div>
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
-                  {formatUsd((product.price ?? '').toString())}
+                  {formatUsd(
+                    ((rent.product_rent_price ?? rent.price) || '') + ''
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -329,7 +317,7 @@ function ProductPage() {
 
       <PaginationComponent
         currentPage={page}
-        totalPages={getAllProductsData?.page_count ?? 1}
+        totalPages={getAllRentsData?.page_count ?? 1}
         onPageChange={(p) => setPage(p)}
       />
 
@@ -522,29 +510,4 @@ function ProductPage() {
   )
 }
 
-export default function Products() {
-  const defaultTab = 'products'
-  return (
-    <>
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-[30px] font-semibold text-[#09090B]">
-          Mahsulotlar
-        </h1>
-      </div>
-
-      <Tabs defaultValue={defaultTab}>
-        <TabsList>
-          <TabsTrigger value="products">Mahsulotlar</TabsTrigger>
-          <TabsTrigger value="rents">Ijara mahsulotlari</TabsTrigger>
-        </TabsList>
-        <TabsContent value="products">
-          <ProductPage />
-        </TabsContent>
-        <TabsContent value="rents">
-          <RentPage />
-        </TabsContent>
-      </Tabs>
-    </>
-  )
-}
+export default RentPage
