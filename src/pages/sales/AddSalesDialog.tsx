@@ -22,7 +22,7 @@ export default function SaleDetailsDialog({ open, setOpen, saleData }: Props) {
         </DialogHeader>
 
         {saleData ? (
-          <div className="space-y-4">
+          <div className="space-y-4 grid grid-cols-2">
             {/* Branch */}
             <div>
               <p className="text-sm text-gray-500">Filial nomi</p>
@@ -68,34 +68,55 @@ export default function SaleDetailsDialog({ open, setOpen, saleData }: Props) {
               </p>
             </div>
 
-            {/* Items */}
-            <div className="space-y-2">
-              <p className="font-semibold">Items:</p>
-              {saleData.items.map((item) => (
-                <div
-                  key={item._id}
-                  className="flex justify-between text-sm border p-2 rounded"
-                >
-                  <span>
-                    Mahsulot Nomi: {item.product_id.product.name || "Noma'lum"}
-                  </span>
-                  <span>
-                    Category:{' '}
-                    {item.product_id.product.category_id.name || "Noma'lum"}
-                  </span>
-                  <span>Miqdori: {item.quantity || 0}</span>
-                  <span>Narxi: {item.price || 0}</span>
-                </div>
-              ))}
+            <div className="col-span-2">
+              <div className="overflow-x-auto mb-4">
+                <table className="min-w-full border border-gray-200 rounded">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                        Mahsulot Nomi
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                        Kategoriya
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                        Miqdori
+                      </th>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                        Narxi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {saleData.items.map((item) => (
+                      <tr key={item._id} className="border-t">
+                        <td className="px-4 py-2 text-sm">
+                          {item.product_id.product?.name || "Noma'lum"}
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                          {item.product_id.product?.category_id?.name ||
+                            "Noma'lum"}
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                          {item.quantity || 0}
+                        </td>
+                        <td className="px-4 py-2 text-sm">{item.price || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-full"
+              >
+                Yopish
+              </Button>
             </div>
 
-            <Button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="w-full"
-            >
-              Yopish
-            </Button>
+            {/* Items */}
           </div>
         ) : (
           <p>Ma’lumot yuklanmoqda...</p>

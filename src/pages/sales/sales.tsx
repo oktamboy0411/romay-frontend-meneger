@@ -7,13 +7,13 @@ import {
 } from '@/components/ui/select'
 import { useGetSalesQuery } from '@/store/sales/sales.api' // 🔹 SALES API
 import { TableSkeleton } from '../../components/ui/table-skeleton'
-import { AlertCircle, Search } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import SaleDetailsDialog from './AddSalesDialog'
 import type { Sale } from '@/store/sales/types'
+import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -36,7 +36,7 @@ function BalanceCell({ value }: { value: number }) {
 }
 
 function Sales() {
-  const [search, setSearch] = useState('')
+  const [cashier, setCashier] = useState('all')
   const [branch, setBranch] = useState('all')
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState(false)
@@ -60,7 +60,7 @@ function Sales() {
   })
 
   const queryParams = {
-    search,
+    ...(cashier !== 'all' && { cashier_id: cashier }),
     ...(branch !== 'all' && { branch_id: branch }),
     page,
   }
@@ -77,20 +77,21 @@ function Sales() {
     isError: isErrorBranches,
   } = useGetAllBranchesQuery({})
 
+  const cashierQueryParams = {
+    ...(branch !== 'all' && { branch_id: branch }),
+  }
+
+  const {
+    data: { data: cashiersData = [] } = {},
+    isLoading: isLoadingCashiers,
+    isError: isErrorCashiers,
+  } = useGetCashiersQuery(cashierQueryParams)
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Savdolar</h1>
         <div className="flex gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              className="pl-9 w-[300px]"
-              placeholder="savdoni izlash"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
           <Select value={branch} onValueChange={setBranch}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Barcha filiallar" />
@@ -109,6 +110,29 @@ function Sales() {
                 branchesData.map((branch) => (
                   <SelectItem key={branch._id} value={branch._id}>
                     {branch.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <Select value={cashier} onValueChange={setCashier}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Barcha kassalar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barchasi</SelectItem>
+              {isLoadingCashiers ? (
+                <SelectItem disabled value="loading">
+                  Yuklanmoqda...
+                </SelectItem>
+              ) : isErrorCashiers ? (
+                <SelectItem disabled value="error">
+                  Xatolik yuz berdi
+                </SelectItem>
+              ) : (
+                cashiersData.map((cashier) => (
+                  <SelectItem key={cashier._id} value={cashier._id}>
+                    {cashier.username}
                   </SelectItem>
                 ))
               )}
