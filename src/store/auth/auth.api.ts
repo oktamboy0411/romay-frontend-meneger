@@ -26,7 +26,7 @@ const authApi = baseApi.injectEndpoints({
           }
         } catch (error: unknown) {
           console.error('Login failed:', (error as ApiError)?.data || error)
-          clearAuthTokens()
+          // clearAuthTokens()
         }
       },
       invalidatesTags: ['user'],
