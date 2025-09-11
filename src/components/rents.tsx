@@ -201,7 +201,11 @@ export default function Rents() {
         onClose={closeModal}
         product={selectedProduct}
       />
-      <PaginationComponent />
+      <PaginationComponent
+        currentPage={1}
+        totalPages={5}
+        onPageChange={(page) => console.log('Page changed to:', page)}
+      />
     </div>
   )
 }

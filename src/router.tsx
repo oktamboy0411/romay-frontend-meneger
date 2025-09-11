@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/dashboard/dashboard'
 import Clients from './pages/clients/clients'
 import Repairs from './pages/repairs/repairs'
 import Masters from './pages/masters/masters'
+import Cashiers from './pages/cashiers/cashiers'
 
 export const AppRouter = () => {
   return (
@@ -21,6 +22,9 @@ export const AppRouter = () => {
       </Route>
       <Route path="masters" element={<PrivateRoute />}>
         <Route index element={<Masters />} />
+      </Route>
+      <Route path="cashiers" element={<PrivateRoute />}>
+        <Route index element={<Cashiers />} />
       </Route>
 
       <Route path="repairs" element={<PrivateRoute />}>

@@ -335,7 +335,11 @@ function ProductPage() {
         product={selectedProduct}
       />
 
-      <PaginationComponent />
+      <PaginationComponent
+        currentPage={1}
+        totalPages={5}
+        onPageChange={(page) => console.log('Page changed to:', page)}
+      />
 
       {/* Add Product Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

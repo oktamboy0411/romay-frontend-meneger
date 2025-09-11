@@ -91,7 +91,11 @@ export default function Rating({
       </div>
       {showPagination && (
         <CardFooter>
-          <PaginationComponent />
+          <PaginationComponent
+            currentPage={1}
+            totalPages={5}
+            onPageChange={(page) => console.log('Page changed to:', page)}
+          />
         </CardFooter>
       )}
     </Card>
