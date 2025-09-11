@@ -7,6 +7,8 @@ type AuthTokens = {
 }
 
 export const setAuthTokens = (tokens: AuthTokens): void => {
+  console.log('tokens', tokens)
+
   if (typeof window !== 'undefined') {
     localStorage.setItem(AUTH_TOKEN_KEY, tokens.access_token)
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token)
