@@ -45,7 +45,7 @@ const authApi = baseApi.injectEndpoints({
             'User fetch failed:',
             (error as ApiError)?.data || error
           )
-          clearAuthTokens()
+          // clearAuthTokens()
         }
       },
     }),
