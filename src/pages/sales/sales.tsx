@@ -40,11 +40,11 @@ function Sales() {
   const [branch, setBranch] = useState('all')
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState(false)
-  const [selectedSale, setSelectedSale] = useState<Sale | null>({
+  const [selectedSale, setSelectedSale] = useState<Sale>({
     _id: 'string',
-    branch_id: 'string',
-    cashier_id: 'string',
-    client_id: 'string',
+    branch_id: { _id: 'string', name: 'string', address: 'string' },
+    cashier_id: { _id: 'string', username: 'string', phone: 'string' },
+    client_id: { _id: 'string', username: 'string', phone: 'string' },
     items: [],
     status: 'PENDING',
     payments: {
@@ -176,12 +176,16 @@ function Sales() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {s.cashier_id?.username || 'Mavjud emas'}
+                      {typeof s.cashier_id === 'object'
+                        ? s.cashier_id.username
+                        : 'Mavjud emas'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {s.branch_id?.name || "Noma'lum"}
+                      {typeof s.branch_id === 'object'
+                        ? s.branch_id.name
+                        : "Noma'lum"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
