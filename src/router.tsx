@@ -4,8 +4,8 @@ import { PrivateRoute } from './components/PrivateRoute/PrivateRoute'
 import { DashboardPage } from './pages/dashboard/dashboard'
 import Clients from './pages/clients/clients'
 import Repairs from './pages/repairs/repairs'
-import Masters from './pages/masters/masters'
 import Cashiers from './pages/cashiers/cashiers'
+import Assistants from './pages/asistant/asistant'
 
 export const AppRouter = () => {
   return (
@@ -20,8 +20,8 @@ export const AppRouter = () => {
       <Route path="clients" element={<PrivateRoute />}>
         <Route index element={<Clients />} />
       </Route>
-      <Route path="masters" element={<PrivateRoute />}>
-        <Route index element={<Masters />} />
+      <Route path="sellers" element={<PrivateRoute />}>
+        <Route index element={<Assistants />} />
       </Route>
       <Route path="cashiers" element={<PrivateRoute />}>
         <Route index element={<Cashiers />} />

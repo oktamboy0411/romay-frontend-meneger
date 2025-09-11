@@ -40,7 +40,6 @@ export const getSidebarGroups = (): SidebarGroup[] => {
         { title: 'Sotuvchilar', icon: UserRound, url: '/sellers' },
         { title: 'Kassirlar', icon: UserRound, url: '/cashiers' },
         { title: 'Mijozlar', icon: Contact, url: '/clients' },
-        { title: 'Ustalar', icon: Contact, url: '/masters' },
       ],
     },
     {

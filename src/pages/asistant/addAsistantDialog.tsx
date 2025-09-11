@@ -25,19 +25,20 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { useAddMasterMutation } from '@/store/masters/masters.api'
+import { useAddAssistantMutation } from '@/store/asistant/asistant.api'
 
 type Props = {
   open: boolean
   setOpen: (open: boolean) => void
 }
 
-// ✅ yangi schema — siz tashlagan data asosida
+// ✅ Schema yangi JSON ma’lumotga mos
 const addClientSchema = z.object({
-  fullName: z.string().min(2, 'Ism kiritilishi shart'),
+  username: z.string().min(2, 'Ism kiritilishi shart'),
+  description: z.string().optional(),
   phone: z.string().min(9, 'Telefon raqam kiritilishi shart'),
-  work_type: z.string().min(1, 'Ish turi tanlanishi shart'),
   branch_id: z.string().min(1, 'Filial tanlanishi shart'),
+  address: z.string().optional(),
 })
 
 type AddClientValues = z.infer<typeof addClientSchema>
@@ -51,16 +52,17 @@ export default function AddClientDialog({ open, setOpen }: Props) {
   } = useGetAllBranchesQuery({})
 
   // addClient mutation
-  const [addClient] = useAddMasterMutation()
+  const [addClient] = useAddAssistantMutation()
 
   // form
   const form = useForm<AddClientValues>({
     resolver: zodResolver(addClientSchema),
     defaultValues: {
-      fullName: '',
+      username: '',
+      description: '',
       phone: '',
-      work_type: '',
       branch_id: '',
+      address: '',
     },
   })
 
@@ -86,15 +88,33 @@ export default function AddClientDialog({ open, setOpen }: Props) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Full Name */}
+            {/* Username */}
             <FormField
               control={form.control}
-              name="fullName"
+              name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ismi</FormLabel>
+                  <FormLabel>Ism</FormLabel>
                   <FormControl>
-                    <Input placeholder="Javlon Qodirov" {...field} />
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tavsif</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Experienced sales assistant"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,35 +129,7 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                 <FormItem>
                   <FormLabel>Telefon</FormLabel>
                   <FormControl>
-                    <Input placeholder="+998901112233" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Work Type */}
-            <FormField
-              control={form.control}
-              name="work_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ish turi</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Ish turini tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SERVICE">SERVICE</SelectItem>
-                        <SelectItem value="FIELD_SERVICE">
-                          FIELD SERVICE
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input placeholder="+998901234567" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -177,6 +169,21 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                         )}
                       </SelectContent>
                     </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Address */}
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Manzil</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Tashkent, Chilonzor" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
