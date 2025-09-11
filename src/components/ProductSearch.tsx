@@ -3,11 +3,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, Plus } from 'lucide-react'
 import { useGetAllRentProductsQuery } from '@/store/product/product.api'
-import type { ProductWarehouseItem } from '@/store/product/types.d'
+import type { Product } from '@/store/product/types.d'
 import { useDebounce } from '@/hooks/use-debounce'
 
 interface ProductSearchProps {
-  onProductSelect: (product: ProductWarehouseItem) => void
+  onProductSelect: (product: Product) => void
   selectedProductIds: string[]
 }
 
@@ -35,7 +35,7 @@ export default function ProductSearch({
     (product) => !selectedProductIds.includes(product._id)
   )
 
-  const handleProductSelect = (product: ProductWarehouseItem) => {
+  const handleProductSelect = (product: Product) => {
     onProductSelect(product)
     setSearchTerm('')
     setIsOpen(false)
@@ -89,11 +89,10 @@ export default function ProductSearch({
                 >
                   {/* Product Image */}
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                    {product.product.images &&
-                    product.product.images.length > 0 ? (
+                    {product.images && product.images.length > 0 ? (
                       <img
-                        src={product.product.images[0]}
-                        alt={product.product.name}
+                        src={product.images[0]}
+                        alt={product.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -106,12 +105,12 @@ export default function ProductSearch({
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">
-                      {product.product.name}
+                      {product.name}
                     </p>
                     <p className="text-sm text-gray-500">
                       {formatPrice(
-                        product.product.price,
-                        product.product.currency
+                        product.price || 0,
+                        product.currency || 'UZS'
                       )}
                     </p>
                     <p className="text-xs text-gray-400">

@@ -33,12 +33,16 @@ import {
   useCreateSaleProductMutation,
   useGetAllSaleProductsQuery,
 } from '@/store/product/product.api'
-import type { Product, CreateProductRequest } from '@/store/product/types'
+import type {
+  CreateProductRequest,
+  Product as WarehouseProduct,
+} from '@/store/product/types'
 import { useGetAllCategoryQuery } from '@/store/category/category.api'
 import { useUploadFileMutation } from '@/store/upload/upload.api'
 import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
 import { useGetRole } from '@/hooks/use-get-role'
+import { useGetBranch } from '@/hooks/use-get-branch'
 import { CheckRole } from '@/utils/checkRole'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import RentPage from './rents'
@@ -51,27 +55,21 @@ function ProductPage() {
   const [uploadFile] = useUploadFileMutation()
 
   const role = useGetRole()
+  const branch = useGetBranch()
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
     return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
   }
 
-  const getCategoryName = (
-    categoryId: string | { _id: string; name: string }
-  ): string => {
-    if (typeof categoryId === 'object' && categoryId?.name) {
-      return categoryId.name
-    }
-    return String(categoryId) || '—'
-  }
   const [view, setView] = useState<'list' | 'grid'>('list')
   const [open, setOpen] = useState(false)
-  // const [products, setProducts] = useState<Product[]>(dummyProducts)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  // const [products, setProducts] = useState<WarehouseProduct[]>(dummyProducts)
+  const [selectedProduct, setSelectedProduct] =
+    useState<WarehouseProduct | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = (product: WarehouseProduct) => {
     setSelectedProduct(product)
     setIsModalOpen(true)
   }
@@ -129,7 +127,7 @@ function ProductPage() {
       }
 
       const newProduct: CreateProductRequest = {
-        branch: '',
+        branch: branch?._id || '',
         name: values.name,
         description: values.note || 'Mahsulot tavsifi kiritilmagan',
         category_id: values.category,
@@ -216,19 +214,19 @@ function ProductPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
-              {getAllProductsData?.data?.map((product) => (
+              {getAllProductsData?.data?.map((item) => (
                 <tr
-                  key={product._id}
+                  key={item._id}
                   className="hover:bg-[#F9F9F9]"
-                  onClick={() => handleProductClick(product)}
+                  onClick={() => handleProductClick(item)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center">
-                        {product.images?.[0] ? (
+                        {item.product.images?.[0] ? (
                           <img
-                            src={product.images[0]}
-                            alt={product.name}
+                            src={item.product.images[0]}
+                            alt={item.product.name}
                             className="h-8 w-8 object-cover"
                           />
                         ) : (
@@ -237,13 +235,13 @@ function ProductPage() {
                       </div>
                       <div>
                         <div className="text-sm font-medium text-[#18181B]">
-                          {product.name}
+                          {item.product.name}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    {product.product_count > 0 ? (
+                    {item.product_count > 0 ? (
                       <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-700">
                         mavjud
                       </span>
@@ -255,17 +253,17 @@ function ProductPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
-                      {getCategoryName(product.category_id)}
+                      {item.product.category_id?.name || '—'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md border border-[#E4E4E7] text-[#18181B]">
-                      {product.barcode}
+                      {item.product.barcode}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatUsd((product.price ?? '').toString())}
+                      {formatUsd((item.product.price ?? '').toString())}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -274,7 +272,7 @@ function ProductPage() {
                       size="sm"
                       className="text-[#09090B] hover:bg-gray-100"
                     >
-                      {product.description}
+                      {item.product.description}
                     </Button>
                   </td>
                 </tr>
@@ -284,36 +282,36 @@ function ProductPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {getAllProductsData?.data?.map((product, idx) => (
+          {getAllProductsData?.data?.map((item, idx) => (
             <Card
-              key={`${product._id}-${idx}`}
+              key={`${item._id}-${idx}`}
               className="overflow-hidden border border-[#E4E4E7] rounded-xl"
-              onClick={() => handleProductClick(product)}
+              onClick={() => handleProductClick(item)}
             >
               <CardContent className="p-3">
                 <div className="w-full h-36 flex items-center justify-center">
                   <img
                     src={
-                      product.images?.[0] ||
+                      item.product.images?.[0] ||
                       'https://media.istockphoto.com/id/184639599/photo/power-drill-with-large-bit.jpg?s=612x612&w=0&k=20&c=TJczKvZqLmWc5c5O6r86jelaUbYFLCZnwA_uWlhHOG0='
                     }
-                    alt={product.name}
+                    alt={item.product.name}
                     className="max-h-full object-contain"
                   />
                 </div>
                 <div className="mt-3">
                   <span className="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-orange-50 text-orange-600 border border-orange-100">
-                    {getCategoryName(product.category_id)}
+                    {item.product.category_id?.name || '—'}
                   </span>
                 </div>
                 <div className="mt-2 text-base font-semibold leading-5 text-[#18181B] line-clamp-2">
-                  {product.name}
+                  {item.product.name}
                 </div>
                 <div className="text-sm text-[#71717A] mt-1">
-                  {product.description || product.barcode || '—'}
+                  {item.product.description || item.product.barcode || '—'}
                 </div>
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
-                  {formatUsd((product.price ?? '').toString())}
+                  {formatUsd((item.product.price ?? '').toString())}
                 </div>
               </CardContent>
             </Card>
@@ -324,7 +322,16 @@ function ProductPage() {
       <ProductDetailsModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        product={selectedProduct}
+        product={
+          selectedProduct
+            ? {
+                _id: selectedProduct._id,
+                product: selectedProduct.product,
+                product_count: selectedProduct.product_count,
+                branch: selectedProduct.branch,
+              }
+            : null
+        }
       />
 
       <PaginationComponent

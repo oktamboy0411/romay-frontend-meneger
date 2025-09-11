@@ -1,6 +1,7 @@
 import baseApi from '../api'
 import type {
   GetAllProductsResponse,
+  GetAllRentProductsResponse,
   GetAllProductsRequest,
   CreateProductRequest,
   CreateProductResponse,
@@ -22,7 +23,7 @@ export const productApi = baseApi.injectEndpoints({
       providesTags: ['products'],
     }),
     getAllRentProducts: builder.query<
-      GetAllProductsResponse,
+      GetAllRentProductsResponse,
       GetAllProductsRequest
     >({
       query: (params) => ({

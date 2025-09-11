@@ -40,7 +40,7 @@ export default function ProductCard({
     return `${price.toLocaleString()} ${currency}`
   }
 
-  const totalPrice = product.product.price * quantity
+  const totalPrice = (product.product.price || 0) * quantity
 
   return (
     <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white">
@@ -65,11 +65,14 @@ export default function ProductCard({
           {product.product.name}
         </h3>
         <p className="text-sm text-gray-500 mt-1">
-          {formatPrice(product.product.price, product.product.currency)}
+          {formatPrice(
+            product.product.price || 0,
+            product.product.currency || 'UZS'
+          )}
         </p>
         {/* Show total price */}
         <p className="text-sm font-medium text-blue-600 mt-1">
-          Jami: {formatPrice(totalPrice, product.product.currency)}
+          Jami: {formatPrice(totalPrice, product.product.currency || 'UZS')}
         </p>
       </div>
 

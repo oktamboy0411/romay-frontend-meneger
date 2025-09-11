@@ -1,26 +1,10 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import type { ProductWarehouseItem } from '@/store/product/types'
+import type { ProductWarehouseItem } from '@/store/product/types.d'
 
 type ProductDetailsModalProps = {
   isOpen: boolean
   onClose: () => void
   product: ProductWarehouseItem | null
-}
-
-function Tag({
-  children,
-  variant = 'default',
-}: {
-  children: React.ReactNode
-  variant?: 'default' | 'ghost'
-}) {
-  const base =
-    'inline-flex items-center text-xs font-medium rounded-md px-2 py-1'
-  const cls =
-    variant === 'ghost'
-      ? base + ' bg-[#F4F4F5] text-[#F97316]'
-      : base + ' bg-[#BBF7D0] text-[#166534]'
-  return <span className={cls}>{children}</span>
 }
 
 const formatPrice = (price?: string | number) => {
@@ -48,21 +32,23 @@ export function ProductDetailsModal({
           <div className="space-y-4">
             <div className="w-[350px] h-40">
               <img
-                src="/vite.svg"
-                alt={product.product_name}
-                className="w-full h-full rounded-md object-fit"
+                src={
+                  product.product.images?.[0] ||
+                  'https://media.istockphoto.com/id/184639599/photo/power-drill-with-large-bit.jpg?s=612x612&w=0&k=20&c=TJczKvZqLmWc5c5O6r86jelaUbYFLCZnwA_uWlhHOG0='
+                }
+                alt={product.product.name}
+                className="w-full h-full rounded-md object-cover"
               />
             </div>
             <div className="flex flex-col gap-1 items-start mt-10">
               {/* <Tag variant="ghost">{product?.product?.category_id}</Tag> */}
               <p className="font-medium text-[#18181B]">
-                {product?.product_name}
+                {product?.product.name}
               </p>
               <div className="flex items-center gap-4">
                 <p className="font-medium text-[#059669]">
-                  ${formatPrice(product.product.price)}
+                  ${formatPrice(product.product.price || 0)}
                 </p>
-                <Tag>{product.product.status}</Tag>
               </div>
               <p className="text-sm text-zinc-400 mt-4">
                 {product.product.description}

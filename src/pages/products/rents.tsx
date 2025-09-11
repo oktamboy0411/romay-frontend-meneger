@@ -33,12 +33,13 @@ import {
   useCreateRentProductMutation,
   useGetAllRentProductsQuery,
 } from '@/store/product/product.api'
-import type { Product, CreateProductRequest } from '@/store/product/types'
+import type { RentProduct, CreateProductRequest } from '@/store/product/types'
 import { useGetAllCategoryQuery } from '@/store/category/category.api'
 import { useUploadFileMutation } from '@/store/upload/upload.api'
 import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
 import { useGetRole } from '@/hooks/use-get-role'
+import { useGetBranch } from '@/hooks/use-get-branch'
 import { CheckRole } from '@/utils/checkRole'
 
 function RentPage() {
@@ -49,27 +50,22 @@ function RentPage() {
   const [uploadFile] = useUploadFileMutation()
 
   const role = useGetRole()
+  const branch = useGetBranch()
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
     return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
   }
 
-  const getCategoryName = (
-    categoryId: string | { _id: string; name: string }
-  ): string => {
-    if (typeof categoryId === 'object' && categoryId?.name) {
-      return categoryId.name
-    }
-    return String(categoryId) || '—'
-  }
   const [view, setView] = useState<'list' | 'grid'>('list')
   const [open, setOpen] = useState(false)
-  // const [products, setProducts] = useState<Product[]>(dummyProducts)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  // const [products, setProducts] = useState<RentProduct[]>(dummyProducts)
+  const [selectedProduct, setSelectedProduct] = useState<RentProduct | null>(
+    null
+  )
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = (product: RentProduct) => {
     setSelectedProduct(product)
     setIsModalOpen(true)
   }
@@ -83,10 +79,10 @@ function RentPage() {
     name: z.string().min(2, 'Kamida 2 ta belgi kiriting'),
     category: z.string().min(1, 'Kategoriya majburiy'),
     sku: z.string().min(4, 'Bar-kod kamida 4 ta belgi'),
-    price: z
+    rentPrice: z
       .union([z.string(), z.number()])
       .transform((v) => Number(String(v).replace(/[^0-9.]/g, '')))
-      .refine((v) => v > 0, "Narxi 0 dan katta bo'lishi kerak"),
+      .refine((v) => v > 0, "Ijara narxi 0 dan katta bo'lishi kerak"),
     minQty: z
       .union([z.string(), z.number()])
       .transform((v) => Number(String(v).replace(/[^0-9]/g, '')))
@@ -106,7 +102,7 @@ function RentPage() {
       name: '',
       category: '',
       sku: '',
-      price: '' as unknown as number,
+      rentPrice: '' as unknown as number,
       minQty: 0 as unknown as number,
       image: undefined,
       subtitle: '',
@@ -128,11 +124,11 @@ function RentPage() {
 
       const newProduct: CreateProductRequest = {
         // API expects branch and rent-specific field product_rent_price
-        branch: '',
+        branch: branch?._id || '',
         name: values.name,
         description: values.note || 'Mahsulot tavsifi kiritilmagan',
         category_id: values.category,
-        product_rent_price: Number(values.price),
+        product_rent_price: Number(values.rentPrice),
         currency: values.currency,
         images: imageUrl ? [imageUrl] : [],
         barcode: values.sku,
@@ -205,11 +201,15 @@ function RentPage() {
           <table className="w-full">
             <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
               <tr>
-                <th className="px-6 py-3 text-left font-medium">Mijoz</th>
-                <th className="px-6 py-3 text-left font-medium">Holati</th>
+                <th className="px-6 py-3 text-left font-medium">Nomi</th>
+                <th className="px-6 py-3 text-left font-medium">Status</th>
+                <th className="px-6 py-3 text-center font-medium">
+                  Kategoriya
+                </th>
+                <th className="px-6 py-3 text-center font-medium">Bar-kod</th>
                 <th className="px-6 py-3 text-center font-medium">Filial</th>
                 <th className="px-6 py-3 text-center font-medium">
-                  Umumiy narx
+                  Ijara narxi
                 </th>
               </tr>
             </thead>
@@ -223,25 +223,25 @@ function RentPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gray-100 rounded flex items-center overflow-hidden justify-center">
-                        {/* <span className="text-gray-400">📱</span> */}
-                        <img
-                          src={rent.images?.[0]}
-                          alt={rent.name}
-                          className="w-full h-full object-cover"
-                        />
+                        {rent.product.images?.[0] ? (
+                          <img
+                            src={rent.product.images[0]}
+                            alt={rent.product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-400">📱</span>
+                        )}
                       </div>
                       <div>
                         <div className="text-sm font-medium text-[#18181B]">
-                          {rent.name || "Noma'lum"}
+                          {rent.product.name || "Noma'lum"}
                         </div>
-                        {/* <div className="text-xs text-gray-500">
-                          {rent.product.?.name || ''}
-                        </div> */}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    {rent.product_count > 0 ? (
+                    {rent.product_active_count > 0 ? (
                       <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-700">
                         mavjud
                       </span>
@@ -252,18 +252,23 @@ function RentPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {/* <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
-                      {rent.product.branch?.name || '—'}
-                    </span> */}
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
+                      {rent.product.category_id?.name || '—'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-md border border-[#E4E4E7] text-[#18181B]">
+                      {rent.product.barcode}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
+                      {rent.branch || '—'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatUsd(
-                        (
-                          (rent.product_rent_price ?? rent.price) ||
-                          ''
-                        ).toString()
-                      )}
+                      {formatUsd((rent.product_rent_price || 0).toString())}
                     </div>
                   </td>
                 </tr>
@@ -282,26 +287,27 @@ function RentPage() {
               <CardContent className="p-3">
                 <div className="w-full h-36 flex items-center justify-center">
                   <img
-                    src={rent.images?.[0]}
-                    alt={rent.name}
+                    src={
+                      rent.product.images?.[0] ||
+                      'https://media.istockphoto.com/id/184639599/photo/power-drill-with-large-bit.jpg?s=612x612&w=0&k=20&c=TJczKvZqLmWc5c5O6r86jelaUbYFLCZnwA_uWlhHOG0='
+                    }
+                    alt={rent.product.name}
                     className="max-h-full object-contain"
                   />
                 </div>
                 <div className="mt-3">
                   <span className="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-orange-50 text-orange-600 border border-orange-100">
-                    {getCategoryName(rent.category_id)}
+                    {rent.product.category_id?.name || '—'}
                   </span>
                 </div>
                 <div className="mt-2 text-base font-semibold leading-5 text-[#18181B] line-clamp-2">
-                  {rent.name}
+                  {rent.product.name}
                 </div>
                 <div className="text-sm text-[#71717A] mt-1">
-                  {rent.description || rent.barcode || '—'}
+                  {rent.product.description || rent.product.barcode || '—'}
                 </div>
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
-                  {formatUsd(
-                    ((rent.product_rent_price ?? rent.price) || '') + ''
-                  )}
+                  {formatUsd((rent.product_rent_price || 0).toString())}
                 </div>
               </CardContent>
             </Card>
@@ -312,7 +318,16 @@ function RentPage() {
       <ProductDetailsModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        product={selectedProduct}
+        product={
+          selectedProduct
+            ? {
+                _id: selectedProduct._id,
+                product: selectedProduct.product,
+                product_count: selectedProduct.product_active_count,
+                branch: selectedProduct.branch,
+              }
+            : null
+        }
       />
 
       <PaginationComponent
@@ -412,10 +427,10 @@ function RentPage() {
                 <div className="grid grid-cols-[1fr_auto] items-end gap-2">
                   <FormField
                     control={form.control}
-                    name="price"
+                    name="rentPrice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Narxi</FormLabel>
+                        <FormLabel>Ijara narxi</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="10"

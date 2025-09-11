@@ -28,7 +28,7 @@ function Tag({
 
 import { useState } from 'react'
 import { ProductDetailsModal } from '@/components/product-details-modal'
-import type { ProductWarehouseItem } from '@/store/product/types'
+import type { ProductWarehouseItem } from '@/store/product/types.d'
 
 export default function RepairDetails() {
   const [products] = useState(initialProducts)

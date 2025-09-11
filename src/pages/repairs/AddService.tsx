@@ -35,7 +35,7 @@ import { CheckRole } from '@/utils/checkRole'
 import { toast } from 'sonner'
 import ProductCard from '@/components/ProductCard'
 import ProductSearch from '@/components/ProductSearch'
-import type { ProductWarehouseItem } from '@/store/product/types.d'
+import type { Product, ProductWarehouseItem } from '@/store/product/types.d'
 
 // Service schema based on the image design
 const addServiceSchema = z.object({
@@ -95,10 +95,18 @@ export default function AddService() {
   })
 
   // Product handler functions
-  const handleProductSelect = (product: ProductWarehouseItem) => {
+  const handleProductSelect = (product: Product) => {
+    // Convert Product to ProductWarehouseItem
+    const productWarehouseItem: ProductWarehouseItem = {
+      _id: product._id,
+      product: product,
+      product_count: product.product_count,
+      branch: product.branch,
+    }
+
     setSelectedProducts((prev) => ({
       ...prev,
-      [product._id]: { product, quantity: 1 },
+      [product._id]: { product: productWarehouseItem, quantity: 1 },
     }))
   }
 
@@ -125,7 +133,7 @@ export default function AddService() {
   // Calculate totals
   const selectedProductsList = Object.values(selectedProducts)
   const totalProductsPrice = selectedProductsList.reduce(
-    (sum, item) => sum + item.product.product.price * item.quantity,
+    (sum, item) => sum + (item.product.product.price || 0) * item.quantity,
     0
   )
   const selectedProductIds = Object.keys(selectedProducts)
@@ -141,10 +149,10 @@ export default function AddService() {
         ...values,
         products: selectedProductsList.map((item) => ({
           product_id: item.product._id,
-          product_barcode: item.product.product_barcode,
+          product_barcode: item.product.product.barcode,
           quantity: item.quantity,
-          price: item.product.product.price,
-          total_price: item.product.product.price * item.quantity,
+          price: item.product.product.price || 0,
+          total_price: (item.product.product.price || 0) * item.quantity,
         })),
         total_products_price: totalProductsPrice,
         total_service_price: totalService,
