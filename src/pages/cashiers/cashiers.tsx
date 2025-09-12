@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
 import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
+import { format } from 'date-fns'
 
 function Cashiers() {
   const [searchFilter, setSearchFilter] = useState('')
@@ -25,6 +26,8 @@ function Cashiers() {
     isLoading,
     isError,
   } = useGetCashiersQuery(queryParams)
+
+  console.log(clientsData)
 
   return (
     <div className="space-y-6">
@@ -102,13 +105,15 @@ function Cashiers() {
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Manzil</th>
                 <th className="px-6 py-3 text-left font-medium">Filial</th>
-                <th className="px-6 py-3 text-left font-medium">Roli</th>
+                <th className="px-6 py-3 text-left font-medium">
+                  Yaratilgan sana
+                </th>
+                <th className="px-6 py-3 text-left font-medium">Boshqaruv</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {clientsData?.map((c) => (
                 <tr key={c._id} className="hover:bg-[#F9F9F9] cursor-pointer">
-                  {/* Name */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
                       <Link
@@ -121,31 +126,35 @@ function Cashiers() {
                     </div>
                   </td>
 
-                  {/* Phone */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
                       {c.phone || 'Mavjud emas'}
                     </div>
                   </td>
 
-                  {/* Address */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
                       {c.address || 'Mavjud emas'}
                     </div>
                   </td>
 
-                  {/* Branch */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
                       {c.branch_id?.name || "Noma'lum"}
                     </div>
                   </td>
 
-                  {/* Role */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {c.role || "Noma'lum"}
+                      {c.created_at
+                        ? format(new Date(c.created_at), 'dd.MM.yyyy HH:mm')
+                        : "Noma'lum"}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="flex gap-2">
+                      <Button variant="outline">edit</Button>
+                      <Button variant="destructive">delete</Button>
                     </div>
                   </td>
                 </tr>
@@ -155,7 +164,6 @@ function Cashiers() {
         </div>
       )}
 
-      {/* Pagination */}
       <PaginationComponent
         currentPage={page}
         onPageChange={setPage}

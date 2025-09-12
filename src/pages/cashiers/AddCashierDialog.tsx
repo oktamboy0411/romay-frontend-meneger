@@ -24,8 +24,11 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { useAddCashierMutation } from '@/store/cashiers/cashiers'
+import { useGetBranch } from '@/hooks/use-get-branch'
+import { DialogDescription } from '@radix-ui/react-dialog'
+import { Eye, EyeOff } from 'lucide-react'
+import { useState } from 'react'
 
 type Props = {
   open: boolean
@@ -45,11 +48,8 @@ const addClientSchema = z.object({
 type AddClientValues = z.infer<typeof addClientSchema>
 
 export default function AddClientDialog({ open, setOpen }: Props) {
-  const {
-    data: { data: branchesData = [] } = {},
-    isLoading: isLoadingBranches,
-    isError: isErrorBranches,
-  } = useGetAllBranchesQuery({})
+  const [showPassword, setShowPassword] = useState(false)
+  const managerBranch = useGetBranch()
 
   const [addClient] = useAddCashierMutation()
 
@@ -60,7 +60,7 @@ export default function AddClientDialog({ open, setOpen }: Props) {
       phone: '',
       password: '',
       address: '',
-      branch_id: '',
+      branch_id: managerBranch?._id || '',
       role: '',
     },
   })
@@ -78,21 +78,20 @@ export default function AddClientDialog({ open, setOpen }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Mijoz qo'shish</DialogTitle>
-          <p className="text-sm text-gray-500">Bu yerda mijoz qo'shasiz</p>
+          <DialogTitle>Kassir qo'shish</DialogTitle>
+          <DialogDescription>Bu yerda kassir qo'shasiz</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Ism */}
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ismi</FormLabel>
+                  <FormLabel>Fullname</FormLabel>
                   <FormControl>
                     <Input placeholder="John Doe" {...field} />
                   </FormControl>
@@ -101,7 +100,6 @@ export default function AddClientDialog({ open, setOpen }: Props) {
               )}
             />
 
-            {/* Telefon */}
             <FormField
               control={form.control}
               name="phone"
@@ -116,7 +114,6 @@ export default function AddClientDialog({ open, setOpen }: Props) {
               )}
             />
 
-            {/* Parol */}
             <FormField
               control={form.control}
               name="password"
@@ -124,24 +121,36 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                 <FormItem>
                   <FormLabel>Parol</FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Parol kiriting"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Parol kiriting"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Manzil */}
             <FormField
               control={form.control}
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Manzil</FormLabel>
+                  <FormLabel>Yashash Manzili</FormLabel>
                   <FormControl>
                     <Input placeholder="Tashkent, Uzbekistan" {...field} />
                   </FormControl>
@@ -150,46 +159,6 @@ export default function AddClientDialog({ open, setOpen }: Props) {
               )}
             />
 
-            {/* Filial */}
-            <FormField
-              control={form.control}
-              name="branch_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Filiali</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filialni tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoadingBranches ? (
-                          <SelectItem disabled value="loading">
-                            Yuklanmoqda...
-                          </SelectItem>
-                        ) : isErrorBranches ? (
-                          <SelectItem disabled value="error">
-                            Xatolik yuz berdi
-                          </SelectItem>
-                        ) : (
-                          branchesData.map((branch) => (
-                            <SelectItem key={branch._id} value={branch._id}>
-                              {branch.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Rol */}
             <FormField
               control={form.control}
               name="role"
@@ -201,7 +170,7 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-[250px]">
                         <SelectValue placeholder="Rolni tanlang" />
                       </SelectTrigger>
                       <SelectContent>
