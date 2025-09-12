@@ -3,30 +3,37 @@ import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { useGetAllSaleProductsQuery } from '@/store/product/product.api'
+import {
+  useDeleteSaleProductMutation,
+  useGetAllSaleProductsQuery,
+} from '@/store/product/product.api'
 import type { Product } from '@/store/product/types'
 import { Button } from '@/components/ui/button'
 import AddSaleProduct from './addSaleProduct'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import ViewSaleProductModal from './viewSaleProduct'
+import UpdateSaleProduct from './editSaleProduct'
 
 export default function SalePage() {
   const [page, setPage] = useState(1)
+  const [view, setView] = useState<'list' | 'grid'>('list')
+  const [openAdd, setOpenAdd] = useState(false)
+  const [openUpdate, setOpenUpdate] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedId, setSelectedID] = useState<string | undefined>()
+
   const branch = useGetBranch()
   const { data: getAllProductsData } = useGetAllSaleProductsQuery({
     page,
     branch: branch?._id || '',
   })
+  const [deleteSaleProduct] = useDeleteSaleProductMutation()
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
     return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
   }
-
-  const [view, setView] = useState<'list' | 'grid'>('list')
-  const [open, setOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product)
@@ -36,6 +43,13 @@ export default function SalePage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedProduct(null)
+  }
+
+  const handleUpdateClick = (id: string | undefined) => {
+    if (id) {
+      setSelectedID(id)
+      setOpenUpdate(true)
+    }
   }
 
   return (
@@ -50,7 +64,7 @@ export default function SalePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button onClick={() => setOpen(true)}>
+          <Button onClick={() => setOpenAdd(true)}>
             <Plus className="mr-2 h-4 w-4" /> Mahsulot qo'shish
           </Button>
 
@@ -155,8 +169,18 @@ export default function SalePage() {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="flex gap-2">
-                      <Button variant="outline">edit</Button>
-                      <Button variant="destructive">delete</Button>
+                      <Button
+                        onClick={() => handleUpdateClick(item._id)}
+                        variant="outline"
+                      >
+                        edit
+                      </Button>
+                      <Button
+                        onClick={() => deleteSaleProduct(item._id)}
+                        variant="destructive"
+                      >
+                        delete
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -215,8 +239,18 @@ export default function SalePage() {
                     >
                       view
                     </Button>
-                    <Button variant="outline">edit</Button>
-                    <Button variant="destructive">delete</Button>
+                    <Button
+                      onClick={() => handleUpdateClick(item._id)}
+                      variant="outline"
+                    >
+                      edit
+                    </Button>
+                    <Button
+                      onClick={() => deleteSaleProduct(item._id)}
+                      variant="destructive"
+                    >
+                      delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -237,7 +271,12 @@ export default function SalePage() {
         product={selectedProduct ? selectedProduct : null}
       />
 
-      <AddSaleProduct open={open} setOpen={setOpen} />
+      <AddSaleProduct open={openAdd} setOpen={setOpenAdd} />
+      <UpdateSaleProduct
+        open={openUpdate}
+        setOpen={setOpenUpdate}
+        id={selectedId}
+      />
     </div>
   )
 }
