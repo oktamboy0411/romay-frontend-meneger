@@ -263,7 +263,7 @@ function RentPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
-                      {rent.branch || '—'}
+                      {rent.branch.name || '—'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -324,7 +324,7 @@ function RentPage() {
                 _id: selectedProduct._id,
                 product: selectedProduct.product,
                 product_count: selectedProduct.product_active_count,
-                branch: selectedProduct.branch,
+                branch: selectedProduct.branch._id,
               }
             : null
         }

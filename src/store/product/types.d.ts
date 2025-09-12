@@ -52,10 +52,22 @@ export interface Product {
   updated_at: string
 }
 
+export interface Branch {
+  _id: string
+  name: string
+  address: string
+  manager_ids: string[]
+  sales_balance: number
+  service_balance: number
+  total_balance: number
+  created_at: string
+  updated_at: string
+}
+
 // Rent Product Item (specific structure for rent products)
 export interface RentProduct {
   _id: string
-  branch: string
+  branch: Branch
   product_barcode: string
   created_at: string
   from_create: string
