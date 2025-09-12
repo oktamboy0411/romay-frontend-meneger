@@ -101,7 +101,7 @@ export default function AddService() {
       _id: product._id,
       product: product.product,
       product_count: product.product_active_count,
-      branch: product.branch,
+      branch: product.branch._id,
     }
 
     setSelectedProducts((prev) => ({
