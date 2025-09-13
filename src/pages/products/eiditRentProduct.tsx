@@ -6,9 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,11 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useCreateSaleProductMutation } from '@/store/product/product.api'
-import type { CreateProductRequest } from '@/store/product/types'
-import { useGetAllCategoryQuery } from '@/store/category/category.api'
-import { useUploadFileMutation } from '@/store/upload/upload.api'
-import { useGetBranch } from '@/hooks/use-get-branch'
 import {
   Select,
   SelectContent,
@@ -32,90 +25,73 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useEffect } from 'react'
-import { useGetSaleProductDetailByBarcodeQuery } from '@/store/product-barcode/product-barcode'
+
+import {
+  useGetRentProductByIdQuery,
+  useUpdateRentProductMutation,
+} from '@/store/product/product.api'
+import type { UpdateProductRequest } from '@/store/product/types'
+import { useGetAllCategoryQuery } from '@/store/category/category.api'
+import { useUploadFileMutation } from '@/store/upload/upload.api'
 import { toast } from 'sonner'
 
-export default function AddSaleProduct({
+type FormValues = {
+  name: string
+  category_id: string
+  barcode: string
+  product_count: number | string
+  product_rent_price: number | string
+  description?: string
+  image?: File | null
+}
+
+export default function UpdateRentProduct({
   open,
   setOpen,
+  id,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  id: string | undefined
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
-  const [createProduct] = useCreateSaleProductMutation()
+  const [updateProduct] = useUpdateRentProductMutation()
   const [uploadFile] = useUploadFileMutation()
-  const branch = useGetBranch()
 
-  const formSchema = z.object({
-    name: z.string().min(2, 'Kamida 2 ta belgi kiriting'),
-    category: z.string().min(1, 'Kategoriya majburiy'),
-    sku: z.string().min(4, 'Bar-kod kamida 4 ta belgi'),
-    price: z
-      .union([z.string(), z.number()])
-      .transform((v) => Number(String(v).replace(/[^0-9.]/g, '')))
-      .refine((v) => v > 0, "Narxi 0 dan katta bo'lishi kerak"),
-    minQty: z
-      .union([z.string(), z.number()])
-      .transform((v) => Number(String(v).replace(/[^0-9]/g, ''))),
-    image: z.any().optional(),
-    subtitle: z.string().optional(),
-    currency: z.string().default('UZS'),
-    status: z.string().default('Active'),
-    note: z.string().min(1, 'Izoh majburiy'),
+  const { data: productData, isFetching } = useGetRentProductByIdQuery(id!, {
+    skip: !id,
   })
 
-  type FormValues = z.infer<typeof formSchema>
-
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
     defaultValues: {
-      sku: '',
       name: '',
-      category: '',
-      price: 0,
-      minQty: 0,
-      image: undefined,
-      subtitle: '',
-      currency: 'UZS',
-      status: 'Active',
-      note: '',
+      category_id: '',
+      barcode: '',
+      product_count: 0,
+      product_rent_price: 0,
+      description: '',
+      image: null,
     },
   })
 
-  const sku = form.watch('sku')
-
-  // barcode bo‘yicha ma’lumot olish
-  const { data: saleProductData } = useGetSaleProductDetailByBarcodeQuery(sku, {
-    skip: !sku || sku.length < 4,
-  })
-
-  // barcode o‘zgarganda formni tozalash va yangi kelgan malumotni joylash
+  // Ma’lumot kelganda formni to‘ldirish
   useEffect(() => {
-    if (saleProductData?.data) {
-      const product = saleProductData.data
-      form.setValue('name', product.name || '')
-      form.setValue('category', product.category_id || '')
-      form.setValue('price', product.price || 0)
-      form.setValue('note', product.description || '')
-      form.setValue('currency', product.currency || 'UZS')
-      form.setValue('status', product.status || 'Active')
-    } else {
-      // agar yo‘q bo‘lsa boshqa maydonlarni tozalab qo‘yish
+    if (productData?.data) {
+      const p = productData.data
       form.reset({
-        sku: sku || '',
-        name: '',
-        category: '',
-        price: 0,
-        minQty: 0,
-        image: undefined,
-        subtitle: '',
-        currency: 'UZS',
-        status: 'Active',
-        note: '',
+        name: p.product.name,
+        category_id:
+          typeof p.product.category_id === 'string'
+            ? p.product.category_id
+            : p.product.category_id?._id,
+        barcode: p.product.barcode,
+        product_count: p.product_count ?? 0,
+        product_rent_price: p.product.price ?? 0,
+        description: p.product.description ?? '',
+        image: null,
       })
     }
-  }, [saleProductData, sku])
+  }, [productData])
 
   interface RTKError {
     data: {
@@ -128,65 +104,51 @@ export default function AddSaleProduct({
 
   const onSubmit = async (values: FormValues) => {
     try {
-      let imageUrl = ''
+      let images: string[] = productData?.data?.product?.images || []
+
+      // Yangi rasm yuklangan bo‘lsa
       if (values.image && values.image instanceof File) {
         const uploadResponse = await uploadFile(values.image).unwrap()
-        imageUrl = uploadResponse.file_path
+        images = [uploadResponse.file_path] // faqat yangi rasm
       }
 
-      const productPayload: CreateProductRequest = {
-        branch: branch?._id || '',
+      const body: UpdateProductRequest = {
         name: values.name,
-        description: values.note || 'Mahsulot tavsifi kiritilmagan',
-        category_id: values.category,
-        price: Number(values.price),
-        currency: values.currency,
-        images: imageUrl ? [imageUrl] : [],
-        barcode: values.sku,
-        attributes: [],
-        product_count: Number(values.minQty) || 0,
+        category_id: values.category_id,
+        barcode: values.barcode,
+        product_count: Number(values.product_count),
+        product_rent_price: Number(values.product_rent_price),
+        description: values.description,
+        images,
+        attributes: [], // hozircha bo‘sh jo‘natilyapti
       }
 
-      await createProduct(productPayload).unwrap()
-
+      await updateProduct({ id: id!, body }).unwrap()
       setOpen(false)
-      form.reset()
-      toast.success('Mahsulot muvaffaqiyatli yaratildi')
+      toast.success('Ijaraga mahsulot muvaffaqiyatli yangilandi')
     } catch (error) {
       const err = error as RTKError
       toast.error(
-        err?.data?.error?.msg || 'Mahsulotni yaratishda xatolik yuz berdi'
+        err?.data?.error?.msg ||
+          'Ijaraga mahsulotni yangilashda xatolik yuz berdi'
       )
     }
   }
-
-  const isFormDisabled = !sku || sku.length < 4
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Mahsulot qo'shish</DialogTitle>
-          <DialogDescription>Bu yerda mahsulot qo'sha olasiz</DialogDescription>
+          <DialogTitle>Ijaraga mahsulotni yangilash</DialogTitle>
+          <DialogDescription>
+            Bu yerda mavjud ijaraga mahsulotni tahrirlay olasiz
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* BARCODE */}
-            <FormField
-              control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bar-kod</FormLabel>
-                  <FormControl>
-                    <Input placeholder="020202020202" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <fieldset disabled={isFormDisabled} className="space-y-4">
+        {isFetching ? (
+          <p className="text-center text-sm text-gray-500">Yuklanmoqda...</p>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* IMAGE */}
               <FormField
                 control={form.control}
@@ -199,7 +161,7 @@ export default function AddSaleProduct({
                         value={(field.value as File | null) ?? null}
                         onChange={(file) => field.onChange(file)}
                         accept="image/*,application/pdf"
-                        maxSizeMB={10}
+                        maxSizeMB={2}
                       />
                     </FormControl>
                     <FormMessage />
@@ -210,14 +172,14 @@ export default function AddSaleProduct({
               {/* CATEGORY */}
               <FormField
                 control={form.control}
-                name="category"
+                name="category_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Kategoriya</FormLabel>
                     <FormControl>
                       <Select
-                        onValueChange={field.onChange}
                         value={field.value}
+                        onValueChange={(val) => field.onChange(val)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Kategoriya tanlang" />
@@ -251,28 +213,28 @@ export default function AddSaleProduct({
                 )}
               />
 
-              {/* PRICE */}
+              {/* BARCODE */}
               <FormField
                 control={form.control}
-                name="price"
+                name="barcode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Narxi</FormLabel>
+                    <FormLabel>Bar-kod</FormLabel>
                     <FormControl>
-                      <Input placeholder="10" inputMode="decimal" {...field} />
+                      <Input placeholder="020202020202" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* MIN QTY */}
+              {/* PRODUCT COUNT */}
               <FormField
                 control={form.control}
-                name="minQty"
+                name="product_count"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Minimal miqdori</FormLabel>
+                    <FormLabel>Mahsulot miqdori</FormLabel>
                     <FormControl>
                       <Input placeholder="0" inputMode="numeric" {...field} />
                     </FormControl>
@@ -281,10 +243,25 @@ export default function AddSaleProduct({
                 )}
               />
 
-              {/* NOTE */}
+              {/* RENT PRICE */}
               <FormField
                 control={form.control}
-                name="note"
+                name="product_rent_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ijara narxi</FormLabel>
+                    <FormControl>
+                      <Input placeholder="500" inputMode="decimal" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* DESCRIPTION */}
+              <FormField
+                control={form.control}
+                name="description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Izoh</FormLabel>
@@ -300,11 +277,11 @@ export default function AddSaleProduct({
               />
 
               <Button type="submit" className="w-full">
-                Saqlash
+                Yangilash
               </Button>
-            </fieldset>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   )

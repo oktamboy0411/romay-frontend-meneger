@@ -1,56 +1,21 @@
-import { Search, Plus, Filter, LayoutGrid, List } from 'lucide-react'
+import { Search, Plus, LayoutGrid, List } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { FileUpload } from '@/components/ui/file-upload'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  useCreateRentProductMutation,
-  useGetAllRentProductsQuery,
-} from '@/store/product/product.api'
-import type { RentProduct, CreateProductRequest } from '@/store/product/types'
-import { useGetAllCategoryQuery } from '@/store/category/category.api'
-import { useUploadFileMutation } from '@/store/upload/upload.api'
+import { useGetAllRentProductsQuery } from '@/store/product/product.api'
+import type { RentProduct } from '@/store/product/types'
 import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
 import { useGetRole } from '@/hooks/use-get-role'
-import { useGetBranch } from '@/hooks/use-get-branch'
 import { CheckRole } from '@/utils/checkRole'
+import CreateRentProduct from './addRentProduct'
 
 function RentPage() {
   const [page, setPage] = useState(1)
   const { data: getAllRentsData } = useGetAllRentProductsQuery({ page })
-  const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
-  const [createProduct] = useCreateRentProductMutation({})
-  const [uploadFile] = useUploadFileMutation()
 
   const role = useGetRole()
-  const branch = useGetBranch()
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
@@ -58,7 +23,7 @@ function RentPage() {
   }
 
   const [view, setView] = useState<'list' | 'grid'>('list')
-  const [open, setOpen] = useState(false)
+  const [openAdd, setOpenAdd] = useState(false)
   // const [products, setProducts] = useState<RentProduct[]>(dummyProducts)
   const [selectedProduct, setSelectedProduct] = useState<RentProduct | null>(
     null
@@ -75,76 +40,6 @@ function RentPage() {
     setSelectedProduct(null)
   }
 
-  const formSchema = z.object({
-    name: z.string().min(2, 'Kamida 2 ta belgi kiriting'),
-    category: z.string().min(1, 'Kategoriya majburiy'),
-    sku: z.string().min(4, 'Bar-kod kamida 4 ta belgi'),
-    rentPrice: z
-      .union([z.string(), z.number()])
-      .transform((v) => Number(String(v).replace(/[^0-9.]/g, '')))
-      .refine((v) => v > 0, "Ijara narxi 0 dan katta bo'lishi kerak"),
-    minQty: z
-      .union([z.string(), z.number()])
-      .transform((v) => Number(String(v).replace(/[^0-9]/g, '')))
-      .refine((v) => v >= 0, "Minimal miqdor manfiy bo'lmasin"),
-    image: z.any().optional(),
-    subtitle: z.string().optional(),
-    currency: z.string().default('UZS'),
-    status: z.string().default('Active'),
-    note: z.string().min(1, 'Izoh majburiy'),
-  })
-
-  type FormValues = z.infer<typeof formSchema>
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      category: '',
-      sku: '',
-      rentPrice: '' as unknown as number,
-      minQty: 0 as unknown as number,
-      image: undefined,
-      subtitle: '',
-      currency: 'UZS',
-      status: 'Active',
-      note: '',
-    },
-  })
-
-  const onSubmit = async (values: FormValues) => {
-    try {
-      let imageUrl = ''
-
-      // Agar fayl tanlangan bo'lsa, avval uni upload qilamiz
-      if (values.image && values.image instanceof File) {
-        const uploadResponse = await uploadFile(values.image).unwrap()
-        imageUrl = uploadResponse.file_path
-      }
-
-      const newProduct: CreateProductRequest = {
-        // API expects branch and rent-specific field product_rent_price
-        branch: branch?._id || '',
-        name: values.name,
-        description: values.note || 'Mahsulot tavsifi kiritilmagan',
-        category_id: values.category,
-        product_rent_price: Number(values.rentPrice),
-        currency: values.currency,
-        images: imageUrl ? [imageUrl] : [],
-        barcode: values.sku,
-        attributes: [],
-        product_count: Number(values.minQty) || 0,
-      }
-
-      await createProduct(newProduct).unwrap()
-      setOpen(false)
-      form.reset()
-    } catch (error) {
-      console.error('Mahsulot yaratishda xatolik:', error)
-      // Bu yerda error handling qo'shishingiz mumkin
-    }
-  }
-  console.log(getAllRentsData)
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -155,23 +50,10 @@ function RentPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input className="pl-9 w-[300px]" placeholder="mahsulotni izlash" />
           </div>
-          <Button variant={'outline'} className="gap-2">
-            <Filter className="h-4 w-4" /> Filter: Hammasi
-          </Button>
         </div>
         <div className="flex items-center gap-3">
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Barcha filiallar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha filiallar</SelectItem>
-              <SelectItem value="1">Filial 1</SelectItem>
-              <SelectItem value="2">Filial 2</SelectItem>
-            </SelectContent>
-          </Select>
           {CheckRole(role, ['manager', 'storekeeper']) && (
-            <Button onClick={() => setOpen(true)}>
+            <Button onClick={() => setOpenAdd(true)}>
               <Plus className="mr-2 h-4 w-4" /> Mahsulot qo'shish
             </Button>
           )}
@@ -336,191 +218,7 @@ function RentPage() {
         onPageChange={(p) => setPage(p)}
       />
 
-      {/* Add Product Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Mahsulot qo'shish</DialogTitle>
-            <DialogDescription>
-              Bu yerda mahsulot qo'sha olasiz
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="sr-only">
-                      Mahsulot suratini yuklash
-                    </FormLabel>
-                    <FormControl>
-                      <FileUpload
-                        value={(field.value as File | null) ?? null}
-                        onChange={(file) => field.onChange(file)}
-                        accept="image/*,application/pdf"
-                        maxSizeMB={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kategoriya</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategoriya tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAllCategoriesData?.data?.map((category) => (
-                            <SelectItem key={category._id} value={category._id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mahsulot nomi</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mahsulot nomi" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="sku"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bar-kod</FormLabel>
-                      <FormControl>
-                        <Input placeholder="020202020202" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-[1fr_auto] items-end gap-2">
-                  <FormField
-                    control={form.control}
-                    name="rentPrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ijara narxi</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="10"
-                            inputMode="decimal"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="currency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="sr-only">Valyuta</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger className="w-[90px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="UZS">UZS</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="minQty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimal miqdori</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0" inputMode="numeric" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="subtitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tasnifi (ixtiyoriy)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Shurupovert" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="note"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Izoh</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Mahsulot haqida qisqacha ma'lumot"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full">
-                Saqlash
-              </Button>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <CreateRentProduct open={openAdd} setOpen={setOpenAdd} />
     </div>
   )
 }
