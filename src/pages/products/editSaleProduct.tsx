@@ -33,6 +33,7 @@ import {
 import type { UpdateProductRequest } from '@/store/product/types'
 import { useGetAllCategoryQuery } from '@/store/category/category.api'
 import { useUploadFileMutation } from '@/store/upload/upload.api'
+import { toast } from 'sonner'
 
 type FormValues = {
   name: string
@@ -95,6 +96,15 @@ export default function UpdateSaleProduct({
     }
   }, [productData])
 
+  interface RTKError {
+    data: {
+      error?: {
+        msg?: string
+      }
+    }
+    status?: number
+  }
+
   const onSubmit = async (values: FormValues) => {
     try {
       let images: string[] = productData?.data?.product?.images || []
@@ -118,8 +128,12 @@ export default function UpdateSaleProduct({
 
       await updateProduct({ id: id!, body }).unwrap()
       setOpen(false)
+      toast.success('Mahsulot muvaffaqiyatli yangilandi')
     } catch (error) {
-      console.error('Mahsulotni yangilashda xatolik:', error)
+      const err = error as RTKError
+      toast.error(
+        err?.data?.error?.msg || 'Mahsulotni yangilashda xatolik yuz berdi'
+      )
     }
   }
 

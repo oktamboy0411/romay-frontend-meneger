@@ -13,6 +13,7 @@ import AddSaleProduct from './addSaleProduct'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import ViewSaleProductModal from './viewSaleProduct'
 import UpdateSaleProduct from './editSaleProduct'
+import { toast } from 'sonner'
 
 export default function SalePage() {
   const [page, setPage] = useState(1)
@@ -49,6 +50,29 @@ export default function SalePage() {
     if (id) {
       setSelectedID(id)
       setOpenUpdate(true)
+    }
+  }
+
+  interface RTKError {
+    data: {
+      error?: {
+        msg?: string
+      }
+    }
+    status?: number
+  }
+
+  const handleDeleteClick = async (id: string | undefined) => {
+    try {
+      if (id) {
+        await deleteSaleProduct(id).unwrap()
+        toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
+      }
+    } catch (error: unknown) {
+      const err = error as RTKError
+      toast.error(
+        err?.data?.error?.msg || 'Mahsulotni o‘chirishda xatolik yuz berdi'
+      )
     }
   }
 
@@ -176,7 +200,7 @@ export default function SalePage() {
                         edit
                       </Button>
                       <Button
-                        onClick={() => deleteSaleProduct(item._id)}
+                        onClick={() => handleDeleteClick(item._id)}
                         variant="destructive"
                       >
                         delete
@@ -246,7 +270,7 @@ export default function SalePage() {
                       edit
                     </Button>
                     <Button
-                      onClick={() => deleteSaleProduct(item._id)}
+                      onClick={() => handleDeleteClick(item._id)}
                       variant="destructive"
                     >
                       delete

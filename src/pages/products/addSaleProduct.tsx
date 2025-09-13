@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { useEffect } from 'react'
 import { useGetSaleProductDetailByBarcodeQuery } from '@/store/product-barcode/product-barcode'
+import { toast } from 'sonner'
 
 export default function AddSaleProduct({
   open,
@@ -116,6 +117,15 @@ export default function AddSaleProduct({
     }
   }, [saleProductData, sku])
 
+  interface RTKError {
+    data: {
+      error?: {
+        msg?: string
+      }
+    }
+    status?: number
+  }
+
   const onSubmit = async (values: FormValues) => {
     try {
       let imageUrl = ''
@@ -141,8 +151,12 @@ export default function AddSaleProduct({
 
       setOpen(false)
       form.reset()
+      toast.success('Mahsulot muvaffaqiyatli yaratildi')
     } catch (error) {
-      console.error('Mahsulot saqlashda xatolik:', error)
+      const err = error as RTKError
+      toast.error(
+        err?.data?.error?.msg || 'Mahsulotni yaratishda xatolik yuz berdi'
+      )
     }
   }
 
