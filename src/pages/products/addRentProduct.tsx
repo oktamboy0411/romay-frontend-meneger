@@ -275,32 +275,38 @@ export default function CreateRentProduct({
             <FormItem>
               <FormLabel>Rasmlar</FormLabel>
               <div className="space-y-2">
-                {form.watch('images').map((file, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <FileUpload
-                      value={file ?? null}
-                      onChange={(newFile) => {
-                        const images = [...form.getValues('images')]
-                        images[index] = newFile
-                        form.setValue('images', images)
-                      }}
-                      accept="image/*"
-                      maxSizeMB={2}
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        const images = [...form.getValues('images')]
-                        images.splice(index, 1)
-                        form.setValue('images', images)
-                      }}
-                    >
-                      O‘chirish
-                    </Button>
-                  </div>
-                ))}
+                {form.watch('images').map((file, index) =>
+                  typeof file === 'string' ? (
+                    <div key={index} className="flex items-center gap-2">
+                      <img src={file} alt={`Uploaded ${index + 1}`} />
+                    </div>
+                  ) : (
+                    <div key={index} className="flex items-center gap-2">
+                      <FileUpload
+                        value={file ?? null}
+                        onChange={(newFile) => {
+                          const images = [...form.getValues('images')]
+                          images[index] = newFile
+                          form.setValue('images', images)
+                        }}
+                        accept="image/*"
+                        maxSizeMB={2}
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          const images = [...form.getValues('images')]
+                          images.splice(index, 1)
+                          form.setValue('images', images)
+                        }}
+                      >
+                        O‘chirish
+                      </Button>
+                    </div>
+                  )
+                )}
                 <Button
                   type="button"
                   variant="secondary"
