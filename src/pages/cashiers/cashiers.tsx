@@ -2,18 +2,30 @@ import { Link } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
-import AddClientDialog from './AddCashierDialog'
 import { Input } from '@/components/ui/input'
-import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
-import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
+import {
+  useDeleteCashierMutation,
+  useGetCashiersQuery,
+} from '@/store/cashiers/cashiers'
 import { format } from 'date-fns'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import { useHandleError } from '@/hooks/use-handle-error'
+import AddCashierDialog from './AddCashierDialog'
+import UpdateCashierDialog from './UpdateCashierDialog'
+import { TablePagination } from '@/components/TablePagination'
 
 function Cashiers() {
   const [searchFilter, setSearchFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('sale_cashier')
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const [updateCashierId, setUpdateCashierId] = useState<string>('')
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const msgError = useHandleError()
+  const [deleteCashier] = useDeleteCashierMutation()
 
   const queryParams = {
     search: searchFilter,
@@ -27,7 +39,8 @@ function Cashiers() {
     isError,
   } = useGetCashiersQuery(queryParams)
 
-  console.log(clientsData)
+  const totalPages = pagination?.total_pages || 1
+  const totalItems = pagination?.total || 0
 
   return (
     <div className="space-y-6">
@@ -108,7 +121,7 @@ function Cashiers() {
                 <th className="px-6 py-3 text-left font-medium">
                   Yaratilgan sana
                 </th>
-                <th className="px-6 py-3 text-left font-medium">Boshqaruv</th>
+                <th className="px-6 py-3 text-left font-medium">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
@@ -151,11 +164,26 @@ function Cashiers() {
                         : "Noma'lum"}
                     </div>
                   </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <Button variant="outline">edit</Button>
-                      <Button variant="destructive">delete</Button>
-                    </div>
+                  <td className="flex items-center justify-center px-4 py-2 whitespace-nowrap">
+                    <EditAndDeletePopover
+                      id={c._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setUpdateCashierId(c._id)
+                        setUpdateOpen(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteCashier(c._id).unwrap()
+                          console.log('Sotuvchi o‘chirildi:', c._id)
+                          setOpen(false)
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -164,13 +192,28 @@ function Cashiers() {
         </div>
       )}
 
-      <PaginationComponent
+      <TablePagination
         currentPage={page}
-        onPageChange={setPage}
-        totalPages={pagination?.total_pages || 1}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
       />
 
-      <AddClientDialog open={open} setOpen={setOpen} />
+      <AddCashierDialog open={open} setOpen={setOpen} />
+
+      <UpdateCashierDialog
+        open={updateOpen}
+        setOpen={function (open: boolean): void {
+          setUpdateOpen(open)
+        }}
+        id={updateCashierId}
+      />
     </div>
   )
 }

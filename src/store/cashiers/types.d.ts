@@ -1,3 +1,5 @@
+import type { Client } from '@/types/clients'
+
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 export interface ClientResponse {
   data: Client[]
@@ -9,6 +11,9 @@ export interface ClientResponse {
     total: number
     total_pages: number
   }
+}
+export interface ClientResponseOne {
+  data: Client
 }
 
 export interface ClientRequest {
@@ -37,7 +42,15 @@ export interface AddClientRequest {
 
 export interface UpdateClientResponse {}
 
+interface updateClientData {
+  username: string
+  phone: string
+  branch_id: string
+  role: string
+  password?: string | undefined
+  address?: string | undefined
+}
 export interface UpdateClientRequest {
   id: string
-  body: Partial<Client>
+  body: Partial<updateClientData>
 }

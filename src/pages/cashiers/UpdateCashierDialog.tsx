@@ -24,22 +24,32 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAddCashierMutation } from '@/store/cashiers/cashiers'
+import {
+  useGetOneCashierQuery,
+  useUpdateCashierMutation,
+} from '@/store/cashiers/cashiers'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { Eye, EyeOff } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type Props = {
   open: boolean
   setOpen: (open: boolean) => void
+  id: string
 }
 
 // Schema – faqat kerakli maydonlar
 const addClientSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'),
   phone: z.string().min(9, 'Telefon kiritilishi shart'),
-  password: z.string().min(6, 'Parol kiritilishi shart'),
+  password: z
+    .union([
+      z.string().trim().min(6, 'Parol kamida 6 ta bo‘lsin'),
+      z.literal(''),
+      z.undefined(),
+    ])
+    .optional(),
   address: z.string().optional(),
   branch_id: z.string().min(1, 'Filial tanlanishi shart'),
   role: z.string().min(1, 'Rol tanlanishi shart'),
@@ -47,28 +57,47 @@ const addClientSchema = z.object({
 
 type AddClientValues = z.infer<typeof addClientSchema>
 
-export default function AddCashierDialog({ open, setOpen }: Props) {
+export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
   const [showPassword, setShowPassword] = useState(false)
   const managerBranch = useGetBranch()
+  const { data: cashierData } = useGetOneCashierQuery(id)
 
-  const [addClient] = useAddCashierMutation()
+  const [updateCashier] = useUpdateCashierMutation()
 
   const form = useForm<AddClientValues>({
     resolver: zodResolver(addClientSchema),
     defaultValues: {
-      username: '',
-      phone: '',
+      username: cashierData?.data.username || '',
+      phone: cashierData?.data.phone || '',
       password: '',
-      address: '',
+      address: cashierData?.data.address || '',
       branch_id: managerBranch?._id || '',
-      role: '',
+      role: cashierData?.data.role || '',
     },
   })
 
+  useEffect(() => {
+    if (cashierData?.data) {
+      form.reset({
+        username: cashierData?.data.username || '',
+        phone: cashierData?.data.phone || '',
+        password: '',
+        address: cashierData?.data.address || '',
+        branch_id: managerBranch?._id || '',
+        role: cashierData?.data.role || '',
+      })
+    }
+  }, [cashierData, managerBranch, form])
+
   const onSubmit = async (values: AddClientValues) => {
     try {
-      await addClient(values).unwrap()
-      console.log('Mijoz qo‘shildi:', values)
+      const sendData = { ...values }
+      if (!sendData.password) {
+        delete sendData.password
+      }
+
+      await updateCashier({ id, body: sendData }).unwrap()
+      console.log('Mijoz qo‘shildi:', sendData)
       setOpen(false)
       form.reset()
     } catch (error) {
@@ -80,8 +109,8 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Kassir qo'shish</DialogTitle>
-          <DialogDescription>Bu yerda kassir qo'shasiz</DialogDescription>
+          <DialogTitle>Kassir yangilash</DialogTitle>
+          <DialogDescription>Bu yerda kassirni yangilaysiz</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -119,7 +148,7 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parol</FormLabel>
+                  <FormLabel>Parol (ixtiyoriy)</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -189,7 +218,7 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
             />
 
             <Button type="submit" className="w-full">
-              Saqlash
+              Yangilash
             </Button>
           </form>
         </Form>

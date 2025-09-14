@@ -136,7 +136,7 @@ function Assistants() {
                         : "Noma'lum"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="px-6 py-2 text-center whitespace-nowrap">
                     <EditAndDeletePopover
                       id={a._id}
                       openPopover={openPopover}

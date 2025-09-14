@@ -6,6 +6,7 @@ import type {
   AddClientRequest,
   UpdateClientRequest,
   UpdateClientResponse,
+  ClientResponseOne,
 } from './types'
 
 export const CashiersApi = baseApi.injectEndpoints({
@@ -41,7 +42,7 @@ export const CashiersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['cashiers'],
     }),
-    getOneCashier: build.query<ClientResponse, string>({
+    getOneCashier: build.query<ClientResponseOne, string>({
       query: (id) => ({
         url: `/cashier/get-one/${id}`,
         method: 'GET',
