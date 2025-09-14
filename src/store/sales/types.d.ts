@@ -57,6 +57,7 @@ export interface Sale {
   _id: string
   branch_id: SaleBranch | string
   cashier_id: SaleCashier | string
+  sales_assistant_id: SaleCashier
   client_id: SaleClient | null
   items: SaleItem[]
   status: 'PENDING' | 'PAID' | string

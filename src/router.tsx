@@ -10,6 +10,7 @@ import Sales from './pages/sales/sales'
 import Rents from './pages/rents/rents'
 import AddRent from './pages/rents/AddRent'
 import ProductPage from './pages/products/products'
+import ClientDetails from './pages/clients/clientDetails'
 
 export const AppRouter = () => {
   return (
@@ -21,8 +22,9 @@ export const AppRouter = () => {
       <Route path="dashboard" element={<PrivateRoute />}>
         <Route index element={<DashboardPage />} />
       </Route>
-      <Route path="clients" element={<PrivateRoute />}>
+      <Route path={'clients'} element={<PrivateRoute />}>
         <Route index element={<Clients />} />
+        <Route path={'client/:id'} element={<ClientDetails />} />
       </Route>
       <Route path="sellers" element={<PrivateRoute />}>
         <Route index element={<Assistants />} />
@@ -33,7 +35,6 @@ export const AppRouter = () => {
       <Route path="sales" element={<PrivateRoute />}>
         <Route index element={<Sales />} />
       </Route>
-
       <Route path="rents" element={<PrivateRoute />}>
         <Route index element={<Rents />}></Route>
       </Route>

@@ -6,6 +6,7 @@ import type {
   AddClientRequest,
   UpdateClientRequest,
   UpdateClientResponse,
+  ClientRes,
 } from './types'
 
 export const ClientsApi = baseApi.injectEndpoints({
@@ -41,10 +42,18 @@ export const ClientsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['clients'],
     }),
-    getOneClient: build.query<ClientResponse, string>({
+    getOneClient: build.query<ClientRes, string>({
       query: (id) => ({
         url: `/client/get-one/${id}`,
         method: 'GET',
+      }),
+      providesTags: ['clients'],
+    }),
+    getBranches: build.query<ClientResponse, ClientRequest>({
+      query: (params) => ({
+        url: `/branch/get-all`,
+        method: 'GET',
+        params,
       }),
       providesTags: ['clients'],
     }),
@@ -57,4 +66,5 @@ export const {
   useUpdateClientMutation,
   useDeleteClientMutation,
   useGetOneClientQuery,
+  useGetBranchesQuery,
 } = ClientsApi

@@ -1,16 +1,17 @@
-import { useHandleError } from './use-handle-error'
+import { useHandleError } from '@/hooks/use-handle-error'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Params = {
   request: () => Promise<any>
   onSuccess?: (data?: any) => Promise<void> | void
   onError?: (error?: any) => Promise<void> | void
+  onFinally?: () => Promise<void> | void
 }
 
 export const useHandleRequest = () => {
   const handleError = useHandleError()
 
-  return async ({ request, onSuccess, onError }: Params) => {
+  return async ({ request, onSuccess, onError, onFinally }: Params) => {
     try {
       const result = await request()
       const errors =
@@ -22,18 +23,11 @@ export const useHandleRequest = () => {
         result?.errors
 
       if (errors) {
-        let errorFunc
-
         if (onError) {
-          errorFunc = onError(errors)
+          await onError(errors)
+        } else {
+          handleError(errors)
         }
-
-        if (typeof errorFunc !== 'function') {
-          errorFunc = handleError
-        }
-
-        errorFunc(errors)
-
         return
       }
 
@@ -41,8 +35,21 @@ export const useHandleRequest = () => {
         await onSuccess(result)
       }
     } catch (ex) {
-      handleError(ex)
+      if (onError) {
+        await onError(ex)
+      } else {
+        handleError(ex)
+      }
       console.error(ex)
+    } finally {
+      // onFinally always executes regardless of success or error
+      if (onFinally) {
+        try {
+          await onFinally()
+        } catch (finallyError) {
+          console.error('Error in onFinally callback:', finallyError)
+        }
+      }
     }
   }
 }

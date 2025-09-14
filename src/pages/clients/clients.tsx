@@ -1,20 +1,14 @@
-import { Link } from 'react-router-dom'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useGetClientsQuery } from '@/store/clients/clients.api'
-import { TableSkeleton } from '../../components/ui/table-skeleton'
-import { AlertCircle, Search } from 'lucide-react'
-import { useState } from 'react'
-import AddClientDialog from './AddClientDialog'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { Input } from '@/components/ui/input'
-import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
+import { useGetClientsQuery } from '@/store/clients/clients.api'
+import { AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { TableSkeleton } from '../../components/ui/table-skeleton'
+import AddClientDialog from './AddClientDialog'
+import { useGetUser } from '@/hooks/useGetUser'
+import { SetLocation } from '@/hooks/setLocation'
+import { TablePagination } from '@/components/TablePagination'
+import { Input } from '@/components/ui/input'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -37,70 +31,52 @@ function BalanceCell({ value }: { value: number }) {
 }
 
 function Clients() {
+  const me = useGetUser()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [search, setSearch] = useState('')
-  const [branch, setBranch] = useState('all')
-  const [page, setPage] = useState(1)
-  const [open, setOpen] = useState(false)
 
-  const queryParams = {
-    search,
-    ...(branch !== 'all' && { branch_id: branch }),
-    page,
+  const { data, isLoading, isError } = useGetClientsQuery({
+    branch_id: me?.branch_id._id,
+    page: currentPage,
+    limit: limit,
+    search: search,
+  })
+
+  const navigate = useNavigate()
+  const clientsData = data?.data || []
+  const pagination = data?.pagination
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
-  const {
-    data: { data: clientsData = [], pagination } = {},
-    isLoading,
-    isError,
-  } = useGetClientsQuery(queryParams)
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    setLimit(itemsPerPage)
+    setCurrentPage(1) // Reset to first page when items per page changes
+  }
 
-  const {
-    data: { data: branchesData = [] } = {},
-    isLoading: isLoadingBranches,
-    isError: isErrorBranches,
-  } = useGetAllBranchesQuery({})
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setCurrentPage(1) // Reset to first page when searching
+  }
+
+  SetLocation('Mijozlar')
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center space-x-6">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Mijozlar</h1>
-        <div className="flex gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              className="pl-9 w-[300px]"
-              placeholder="mijozni izlash"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={branch} onValueChange={setBranch}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Barcha filiallar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              {isLoadingBranches ? (
-                <SelectItem disabled value="loading">
-                  Yuklanmoqda...
-                </SelectItem>
-              ) : isErrorBranches ? (
-                <SelectItem disabled value="error">
-                  Xatolik yuz berdi
-                </SelectItem>
-              ) : (
-                branchesData.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-          <Button onClick={() => setOpen(true)} className="py-5">
-            Yangi mijoz qo'shish
-          </Button>
-        </div>
+        <Input
+          placeholder="Ismi yoki telefon raqami bo'yicha qidiring"
+          className="pr-10 max-w-md"
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+        />
+        <Button onClick={() => setOpen(true)} variant="default">
+          Mijoz qo'shish
+        </Button>
       </div>
 
       {isLoading ? (
@@ -117,9 +93,13 @@ function Clients() {
       ) : clientsData.length === 0 ? (
         <div className="border border-[#E4E4E7] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="text-lg text-gray-600">Mijozlar topilmadi</p>
+          <p className="text-lg text-gray-600">
+            {search ? 'Qidiruv natijasi topilmadi' : 'Mijozlar topilmadi'}
+          </p>
           <p className="text-gray-500">
-            Hozircha hech qanday mijoz mavjud emas
+            {search
+              ? `"${search}" bo'yicha hech qanday mijoz topilmadi`
+              : 'Hozircha hech qanday mijoz mavjud emas'}
           </p>
         </div>
       ) : (
@@ -132,25 +112,23 @@ function Clients() {
                   Telefon raqami
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Segment</th>
-                <th className="px-6 py-3 text-left font-medium">Qarz</th>
+                <th className="px-6 py-3 text-left font-medium">Balans</th>
                 <th className="px-6 py-3 text-center font-medium">
-                  mijoz toifasi
+                  Buyurtmalar soni
                 </th>
                 <th className="px-6 py-3 text-center font-medium">Filial</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {clientsData?.map((c) => (
-                <tr key={c.id} className="hover:bg-[#F9F9F9] cursor-pointer">
+                <tr
+                  key={c._id}
+                  className="hover:bg-[#F9F9F9] cursor-pointer"
+                  onClick={() => navigate(`client/${c._id}`)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
-                      <Link
-                        to={`/clients/${c._id}`}
-                        className="hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {c.username}
-                      </Link>
+                      {c.username}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -165,17 +143,17 @@ function Clients() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm">
-                      <BalanceCell value={c.debt.amount || 0} />
+                      <BalanceCell value={c.balance || 0} />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {c.customer_tier || "Noma'lum"}
+                      {c.sales_count || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {c.branch_id?.name || "Noma'lum"}
+                      {c.branch_id.name || "Noma'lum"}
                     </div>
                   </td>
                 </tr>
@@ -184,13 +162,16 @@ function Clients() {
           </table>
         </div>
       )}
-
-      <PaginationComponent
-        currentPage={page}
-        onPageChange={setPage}
-        totalPages={pagination?.total_pages || 1}
-      />
-
+      {pagination && (
+        <TablePagination
+          currentPage={pagination.page || 1}
+          totalPages={pagination.total_pages || 1}
+          totalItems={pagination.total || 0}
+          itemsPerPage={pagination.limit || 10}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
+      )}
       <AddClientDialog open={open} setOpen={setOpen} />
     </div>
   )

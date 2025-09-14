@@ -7,13 +7,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Form,
   FormControl,
   FormField,
@@ -23,35 +16,39 @@ import {
 } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
+import * as z from 'zod'
 import { useAddClientMutation } from '@/store/clients/clients.api'
+import { useHandleRequest } from '@/hooks/use-handle-request'
+import { useGetUser } from '@/hooks/useGetUser'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
   setOpen: (open: boolean) => void
 }
 
-// Yangi schema zod bilan
 const addClientSchema = z.object({
-  username: z.string().min(2, 'Ism kiritilishi shart'),
+  username: z.string().min(2, 'Ism kamida 2 ta belgidan iborat bo‘lishi kerak'),
   description: z.string().optional(),
-  phone: z.string().min(9, 'Raqam kiritilishi shart'),
-  profession: z.string().optional(),
-  birth_date: z.string().optional(),
-  branch_id: z.string().min(1, 'Filial tanlanishi shart'),
-  address: z.string().optional(),
+  phone: z
+    .string()
+    .regex(
+      /^\+998\d{9}$/,
+      'Telefon raqam +998 bilan 9 ta raqamdan iborat bo‘lishi kerak'
+    ),
+  profession: z.string().min(2, 'Kasbni kiriting'),
+  birth_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Sana YYYY-MM-DD formatida bo‘lishi kerak'),
+  address: z
+    .string()
+    .min(3, 'Manzil kamida 3 ta belgidan iborat bo‘lishi kerak'),
 })
 
 type AddClientValues = z.infer<typeof addClientSchema>
 
 export default function AddClientDialog({ open, setOpen }: Props) {
-  const {
-    data: { data: branchesData = [] } = {},
-    isLoading: isLoadingBranches,
-    isError: isErrorBranches,
-  } = useGetAllBranchesQuery({})
-
+  const me = useGetUser()
   const form = useForm<AddClientValues>({
     resolver: zodResolver(addClientSchema),
     defaultValues: {
@@ -60,35 +57,38 @@ export default function AddClientDialog({ open, setOpen }: Props) {
       phone: '',
       profession: '',
       birth_date: '',
-      branch_id: '',
       address: '',
     },
   })
-
   const [addClient] = useAddClientMutation()
+  const handleRequest = useHandleRequest()
 
-  const onSubmit = async (values: AddClientValues) => {
-    try {
-      await addClient(values).unwrap()
-      console.log('Mijoz qo‘shildi:', values)
-      setOpen(false)
-      form.reset()
-    } catch (error) {
-      console.error('Xato:', error)
-    }
+  const onSubmit = async (data: AddClientValues) => {
+    console.log('Form yuborildi:', data)
+    await handleRequest({
+      request: () =>
+        addClient({ ...data, branch_id: me?.branch_id._id as string }).unwrap(),
+      onSuccess: (data) => {
+        toast.success(data.msg)
+        setOpen(false)
+        form.reset()
+      },
+      onError: (err) => console.log(err.error.msg),
+    })
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Mijoz qo'shish</DialogTitle>
-          <p className="text-sm text-gray-500">Bu yerda mijoz qo'shasiz</p>
+          <p className="text-sm text-[#71717A]">
+            Mijoz ma'lumotlarini kiriting
+          </p>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Ism */}
             <FormField
               control={form.control}
               name="username"
@@ -98,14 +98,11 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                   <FormControl>
                     <Input placeholder="Ali Valiyev" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.username?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -115,14 +112,11 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                   <FormControl>
                     <Input placeholder="Doimiy mijoz" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.description?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Phone */}
             <FormField
               control={form.control}
               name="phone"
@@ -132,14 +126,11 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                   <FormControl>
                     <Input placeholder="+998901234567" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.phone?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Profession */}
             <FormField
               control={form.control}
               name="profession"
@@ -149,73 +140,25 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                   <FormControl>
                     <Input placeholder="Doctor" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.profession?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Birth Date */}
             <FormField
               control={form.control}
               name="birth_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tug'ilgan sana</FormLabel>
+                  <FormLabel>Tug‘ilgan sana</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.birth_date?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Branch */}
-            <FormField
-              control={form.control}
-              name="branch_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Filiali</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Barcha filiallar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Barchasi</SelectItem>
-                        {isLoadingBranches ? (
-                          <SelectItem disabled value="loading">
-                            Yuklanmoqda...
-                          </SelectItem>
-                        ) : isErrorBranches ? (
-                          <SelectItem disabled value="error">
-                            Xatolik yuz berdi
-                          </SelectItem>
-                        ) : (
-                          branchesData.map((branch) => (
-                            <SelectItem key={branch._id} value={branch._id}>
-                              {branch.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.branch_id?.message}
-                  </FormMessage>
-                </FormItem>
-              )}
-            />
-
-            {/* Address */}
             <FormField
               control={form.control}
               name="address"
@@ -225,9 +168,7 @@ export default function AddClientDialog({ open, setOpen }: Props) {
                   <FormControl>
                     <Input placeholder="Tashkent, Yunusobod" {...field} />
                   </FormControl>
-                  <FormMessage>
-                    {form.formState.errors.address?.message}
-                  </FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />

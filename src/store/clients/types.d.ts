@@ -2,12 +2,42 @@
 export interface ClientResponse {
   data: Client[]
   pagination: {
-    limit: number
-    next_page: boolean
-    page: number
-    prev_page: boolean
     total: number
     total_pages: number
+    page: number
+    limit: number
+    next_page: boolean
+    prev_page: boolean
+  }
+}
+
+export interface ClientRes {
+  success: boolean
+  data: {
+    debt: {
+      amount: number
+      currency: string
+    }
+    _id: string
+    username: string
+    description: string
+    sales_count: number
+    phone: string
+    profession: string
+    birth_date: Date
+    branch_id: {
+      _id: string
+      name: string
+      address: string
+    }
+    address: string
+    customer_tier: string
+    created_at: Date
+    updated_at: Date
+  }
+  error: {
+    statusCode: number
+    msg: string
   }
 }
 
@@ -16,23 +46,20 @@ export interface ClientRequest {
   branch_id?: string
   page?: number
   limit?: number
+  client_id?: string
 }
 
-export interface AddClientResponse {
-  fullName: string
-  phone: string
-  work_type: string
-  branch_id: string
-}
+export interface AddClientResponse {}
 
 export interface AddClientRequest {
   username: string
-  description?: string | undefined
+  description?: string
   phone: string
-  profession?: string | undefined
-  birth_date?: string | undefined
+  profession: string
+  birth_date: string
   branch_id: string
-  address?: string | undefined
+  address: string
+  address: string
 }
 
 export interface UpdateClientResponse {}
