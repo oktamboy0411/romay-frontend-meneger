@@ -2,7 +2,6 @@ import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
 import {
   useDeleteAssistantMutation,
@@ -15,11 +14,13 @@ import AddAsistantDialog from './addAsistantDialog'
 import UpdateAssistantDialog from './updateAssistantDialog'
 import { useHandleError } from '@/hooks/use-handle-error'
 import { format } from 'date-fns'
+import { TablePagination } from '@/components/TablePagination'
 
 function Assistants() {
   const [search, setSearch] = useState('')
   const branch = useGetBranch()
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState<string>('')
@@ -31,6 +32,7 @@ function Assistants() {
     search,
     branch_id: branch?._id || undefined,
     page,
+    limit,
   }
 
   const {
@@ -41,6 +43,7 @@ function Assistants() {
 
   const assistantsData = assistantsResponse?.data || []
   const totalPages = assistantsResponse?.pagination?.total_pages || 1
+  const totalItems = assistantsResponse?.pagination?.total || 0
 
   return (
     <div className="space-y-6">
@@ -161,10 +164,17 @@ function Assistants() {
         </div>
       )}
 
-      <PaginationComponent
+      <TablePagination
         currentPage={page}
-        onPageChange={setPage}
         totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
       />
 
       <AddAsistantDialog open={open} setOpen={setOpen} />
