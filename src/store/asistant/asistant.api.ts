@@ -6,6 +6,7 @@ import type {
   AddMasterRequest,
   UpdateMasterRequest,
   UpdateMasterResponse,
+  MasterResponseOne,
 } from './types'
 
 export const AssistantApi = baseApi.injectEndpoints({
@@ -41,7 +42,7 @@ export const AssistantApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['assistants'],
     }),
-    getOneAssistant: build.query<MasterResponse, string>({
+    getOneAssistant: build.query<MasterResponseOne, string>({
       query: (id) => ({
         url: `/sales-assistant/get-one/${id}`,
         method: 'GET',

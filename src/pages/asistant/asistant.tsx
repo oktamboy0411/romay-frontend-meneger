@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -15,6 +14,7 @@ import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-del
 import AddAsistantDialog from './addAsistantDialog'
 import UpdateAssistantDialog from './updateAssistantDialog'
 import { useHandleError } from '@/hooks/use-handle-error'
+import { format } from 'date-fns'
 
 function Assistants() {
   const [search, setSearch] = useState('')
@@ -23,6 +23,7 @@ function Assistants() {
   const [open, setOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState<string>('')
+  const [updateAssistant, setUpdateAssistant] = useState<string>('')
   const [deleteAssistant] = useDeleteAssistantMutation()
   const msgError = useHandleError()
 
@@ -93,6 +94,9 @@ function Assistants() {
                 <th className="px-6 py-3 text-left font-medium">Tavsif</th>
                 <th className="px-6 py-3 text-left font-medium">Manzil</th>
                 <th className="px-6 py-3 text-left font-medium">
+                  Barcha Sotuvlar
+                </th>
+                <th className="px-6 py-3 text-left font-medium">
                   Qo'shilgan sana
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Amallar</th>
@@ -102,13 +106,9 @@ function Assistants() {
               {assistantsData.map((a: Master) => (
                 <tr key={a._id} className="hover:bg-[#F9F9F9] cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Link
-                      to={`/assistants/${a._id}`}
-                      className="text-sm font-medium text-[#18181B] hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="text-sm font-medium text-[#18181B]">
                       {a.username}
-                    </Link>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">{a.phone}</div>
@@ -119,11 +119,18 @@ function Assistants() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm text-[#18181B]">{a.branch_id}</div>
+                    <div className="text-sm text-[#18181B]">{a.address}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
                       {a.total_sales?.amount} {a.total_sales?.currency}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <div className="text-sm text-[#18181B]">
+                      {a.created_at
+                        ? format(new Date(a.created_at), 'dd.MM.yyyy HH:mm')
+                        : "Noma'lum"}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center whitespace-nowrap">
@@ -132,6 +139,7 @@ function Assistants() {
                       openPopover={openPopover}
                       setOpenPopover={setOpenPopover}
                       onClickUpdate={() => {
+                        setUpdateAssistant(a._id)
                         setUpdateOpen(true)
                       }}
                       onClickDelete={async () => {
@@ -160,7 +168,11 @@ function Assistants() {
       />
 
       <AddAsistantDialog open={open} setOpen={setOpen} />
-      <UpdateAssistantDialog open={updateOpen} setOpen={setUpdateOpen} />
+      <UpdateAssistantDialog
+        id={updateAssistant}
+        open={updateOpen}
+        setOpen={setUpdateOpen}
+      />
     </div>
   )
 }

@@ -16,16 +16,20 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAddAssistantMutation } from '@/store/asistant/asistant.api'
+import {
+  useGetOneAssistantQuery,
+  useUpdateAssistantMutation,
+} from '@/store/asistant/asistant.api'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import { useHandleError } from '@/hooks/use-handle-error'
+import { useEffect } from 'react'
 
 type Props = {
   open: boolean
   setOpen: (open: boolean) => void
+  id: string
 }
 
-// ✅ Schema yangi JSON ma’lumotga mos
 const addClientSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'),
   description: z.string().optional(),
@@ -36,27 +40,39 @@ const addClientSchema = z.object({
 
 type AddClientValues = z.infer<typeof addClientSchema>
 
-export default function UpdateAssistantDialog({ open, setOpen }: Props) {
+export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
   const branch = useGetBranch()
   const msgError = useHandleError()
-  const [addSaleAssistant] = useAddAssistantMutation()
+  const [updateAssistant] = useUpdateAssistantMutation()
+  const { data: assistantData } = useGetOneAssistantQuery(id)
 
-  // form
   const form = useForm<AddClientValues>({
     resolver: zodResolver(addClientSchema),
     defaultValues: {
-      username: '',
-      description: '',
-      phone: '',
+      username: assistantData?.data.username || '',
+      description: assistantData?.data.description || '',
+      phone: assistantData?.data.phone || '',
       branch_id: branch?._id,
-      address: '',
+      address: assistantData?.data.address,
     },
   })
 
+  useEffect(() => {
+    if (assistantData?.data) {
+      form.reset({
+        username: assistantData.data.username || '',
+        description: assistantData.data.description || '',
+        phone: assistantData.data.phone || '',
+        branch_id: branch?._id || '',
+        address: assistantData.data.address || '',
+      })
+    }
+  }, [assistantData, branch, form])
+
   const onSubmit = async (values: AddClientValues) => {
     try {
-      await addSaleAssistant(values).unwrap()
-      console.log('Mijoz qo‘shildi:', values)
+      await updateAssistant({ id, body: values }).unwrap()
+      console.log('Mijoz yangilandi:', values)
       setOpen(false)
       form.reset()
     } catch (error) {
@@ -69,8 +85,8 @@ export default function UpdateAssistantDialog({ open, setOpen }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Mijoz qo'shish</DialogTitle>
-          <p className="text-sm text-gray-500">Bu yerda mijoz qo'shasiz</p>
+          <DialogTitle>Mijoz yangilash</DialogTitle>
+          <p className="text-sm text-gray-500">Bu yerda mijozni yangilaysiz</p>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -135,7 +151,7 @@ export default function UpdateAssistantDialog({ open, setOpen }: Props) {
           />
 
           <Button type="submit" className="w-full">
-            Saqlash
+            Yangilash
           </Button>
         </form>
       </DialogContent>

@@ -30,6 +30,10 @@ export interface MasterResponse {
     prev_page: boolean
   }
 }
+export interface MasterResponseOne {
+  success: boolean
+  data: Master
+}
 
 // API so‘rovi
 export interface MasterRequest {
