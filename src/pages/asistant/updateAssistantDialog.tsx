@@ -36,7 +36,7 @@ const addClientSchema = z.object({
 
 type AddClientValues = z.infer<typeof addClientSchema>
 
-export default function AddAsistantDialog({ open, setOpen }: Props) {
+export default function UpdateAssistantDialog({ open, setOpen }: Props) {
   const branch = useGetBranch()
   const msgError = useHandleError()
   const [addSaleAssistant] = useAddAssistantMutation()

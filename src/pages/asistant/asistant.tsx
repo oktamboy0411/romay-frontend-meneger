@@ -2,19 +2,29 @@ import { Link } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
-import AddClientDialog from './addAsistantDialog'
 import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
-import { useGetAssistantsQuery } from '@/store/asistant/asistant.api'
+import {
+  useDeleteAssistantMutation,
+  useGetAssistantsQuery,
+} from '@/store/asistant/asistant.api'
 import type { Master } from '@/store/asistant/types'
 import { useGetBranch } from '@/hooks/use-get-branch'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import AddAsistantDialog from './addAsistantDialog'
+import UpdateAssistantDialog from './updateAssistantDialog'
+import { useHandleError } from '@/hooks/use-handle-error'
 
 function Assistants() {
   const [search, setSearch] = useState('')
   const branch = useGetBranch()
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState(false)
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const [deleteAssistant] = useDeleteAssistantMutation()
+  const msgError = useHandleError()
 
   const queryParams = {
     search,
@@ -28,7 +38,6 @@ function Assistants() {
     isError,
   } = useGetAssistantsQuery(queryParams)
 
-  // ⚡ API’dan kelgan ma’lumot
   const assistantsData = assistantsResponse?.data || []
   const totalPages = assistantsResponse?.pagination?.total_pages || 1
 
@@ -82,10 +91,11 @@ function Assistants() {
                 <th className="px-6 py-3 text-left font-medium">Ismi</th>
                 <th className="px-6 py-3 text-left font-medium">Telefon</th>
                 <th className="px-6 py-3 text-left font-medium">Tavsif</th>
-                <th className="px-6 py-3 text-left font-medium">Filial</th>
+                <th className="px-6 py-3 text-left font-medium">Manzil</th>
                 <th className="px-6 py-3 text-left font-medium">
-                  Umumiy sotuv
+                  Qo'shilgan sana
                 </th>
+                <th className="px-6 py-3 text-left font-medium">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
@@ -116,6 +126,26 @@ function Assistants() {
                       {a.total_sales?.amount} {a.total_sales?.currency}
                     </div>
                   </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <EditAndDeletePopover
+                      id={a._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setUpdateOpen(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteAssistant(a._id).unwrap()
+                          console.log('Sotuvchi o‘chirildi:', a._id)
+                          setOpen(false)
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -129,7 +159,8 @@ function Assistants() {
         totalPages={totalPages}
       />
 
-      <AddClientDialog open={open} setOpen={setOpen} />
+      <AddAsistantDialog open={open} setOpen={setOpen} />
+      <UpdateAssistantDialog open={updateOpen} setOpen={setUpdateOpen} />
     </div>
   )
 }
