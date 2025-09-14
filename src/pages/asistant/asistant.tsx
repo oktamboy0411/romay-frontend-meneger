@@ -1,31 +1,24 @@
 import { Link } from 'react-router-dom'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
 import AddClientDialog from './addAsistantDialog'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { Input } from '@/components/ui/input'
 import { PaginationComponent } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
 import { useGetAssistantsQuery } from '@/store/asistant/asistant.api'
 import type { Master } from '@/store/asistant/types'
+import { useGetBranch } from '@/hooks/use-get-branch'
 
 function Assistants() {
   const [search, setSearch] = useState('')
-  const [branch, setBranch] = useState('all')
+  const branch = useGetBranch()
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState(false)
 
   const queryParams = {
     search,
-    ...(branch !== 'all' && { branch_id: branch }),
+    branch_id: branch?._id || undefined,
     page,
   }
 
@@ -34,12 +27,6 @@ function Assistants() {
     isLoading,
     isError,
   } = useGetAssistantsQuery(queryParams)
-
-  const {
-    data: { data: branchesData = [] } = {},
-    isLoading: isLoadingBranches,
-    isError: isErrorBranches,
-  } = useGetAllBranchesQuery({})
 
   // ⚡ API’dan kelgan ma’lumot
   const assistantsData = assistantsResponse?.data || []
@@ -61,29 +48,7 @@ function Assistants() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={branch} onValueChange={setBranch}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Barcha filiallar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              {isLoadingBranches ? (
-                <SelectItem disabled value="loading">
-                  Yuklanmoqda...
-                </SelectItem>
-              ) : isErrorBranches ? (
-                <SelectItem disabled value="error">
-                  Xatolik yuz berdi
-                </SelectItem>
-              ) : (
-                branchesData.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+
           <Button onClick={() => setOpen(true)} className="py-5">
             Yangi qo‘shish
           </Button>

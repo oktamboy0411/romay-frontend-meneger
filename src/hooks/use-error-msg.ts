@@ -5,6 +5,7 @@ export const useErrorMsg = () => (error: any) =>
     : typeof error === 'object'
       ? error?.error?.msg ||
         error?.data?.msg ||
+        error?.data?.error?.msg ||
         error?.msg ||
         error?.[0]?.password ||
         'An error occurred'
