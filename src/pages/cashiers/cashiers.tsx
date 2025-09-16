@@ -31,6 +31,7 @@ function Cashiers() {
     search: searchFilter,
     ...(roleFilter !== 'all' && { role: roleFilter }),
     page,
+    limit,
   }
 
   const {
@@ -177,7 +178,6 @@ function Cashiers() {
                         try {
                           await deleteCashier(c._id).unwrap()
                           console.log('Sotuvchi o‘chirildi:', c._id)
-                          setOpen(false)
                         } catch (error) {
                           console.error('Xato:', error)
                           msgError(error)

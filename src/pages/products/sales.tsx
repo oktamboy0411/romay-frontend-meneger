@@ -1,6 +1,5 @@
 import { Search, Plus, LayoutGrid, List } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { PaginationComponent } from '@/components/pagination'
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -14,6 +13,9 @@ import { useGetBranch } from '@/hooks/use-get-branch'
 import ViewSaleProductModal from './viewSaleProduct'
 import UpdateSaleProduct from './editSaleProduct'
 import { toast } from 'sonner'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import { useHandleError } from '@/hooks/use-handle-error'
+import { TablePagination } from '@/components/TablePagination'
 
 export default function SalePage() {
   const [page, setPage] = useState(1)
@@ -23,11 +25,15 @@ export default function SalePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedId, setSelectedID] = useState<string | undefined>()
+  const [limit, setLimit] = useState(10)
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const msgError = useHandleError()
 
   const branch = useGetBranch()
   const { data: getAllProductsData } = useGetAllSaleProductsQuery({
     page,
-    branch: branch?._id || '',
+    limit,
+    branch: (typeof branch === 'string' ? branch : branch?._id) || '',
   })
   const [deleteSaleProduct] = useDeleteSaleProductMutation()
 
@@ -46,35 +52,8 @@ export default function SalePage() {
     setSelectedProduct(null)
   }
 
-  const handleUpdateClick = (id: string | undefined) => {
-    if (id) {
-      setSelectedID(id)
-      setOpenUpdate(true)
-    }
-  }
-
-  interface RTKError {
-    data: {
-      error?: {
-        msg?: string
-      }
-    }
-    status?: number
-  }
-
-  const handleDeleteClick = async (id: string | undefined) => {
-    try {
-      if (id) {
-        await deleteSaleProduct(id).unwrap()
-        toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
-      }
-    } catch (error: unknown) {
-      const err = error as RTKError
-      toast.error(
-        err?.data?.error?.msg || 'Mahsulotni o‘chirishda xatolik yuz berdi'
-      )
-    }
-  }
+  const totalPages = getAllProductsData?.page_count || 1
+  const totalItems = getAllProductsData?.after_filtering_count || 0
 
   return (
     <div className="space-y-6">
@@ -192,20 +171,24 @@ export default function SalePage() {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleUpdateClick(item._id)}
-                        variant="outline"
-                      >
-                        edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDeleteClick(item._id)}
-                        variant="destructive"
-                      >
-                        delete
-                      </Button>
-                    </div>
+                    <EditAndDeletePopover
+                      id={item._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setSelectedID(item._id)
+                        setOpenUpdate(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteSaleProduct(item._id).unwrap()
+                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -256,25 +239,31 @@ export default function SalePage() {
                   {formatUsd((item.product.price ?? '').toString())}
                 </div>
                 <div className="mt-2 ">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center justify-between">
                     <Button
                       onClick={() => handleProductClick(item)}
                       variant="outline"
                     >
                       view
                     </Button>
-                    <Button
-                      onClick={() => handleUpdateClick(item._id)}
-                      variant="outline"
-                    >
-                      edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteClick(item._id)}
-                      variant="destructive"
-                    >
-                      delete
-                    </Button>
+                    <EditAndDeletePopover
+                      id={item._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setSelectedID(item._id)
+                        setOpenUpdate(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteSaleProduct(item._id).unwrap()
+                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -283,10 +272,17 @@ export default function SalePage() {
         </div>
       )}
 
-      <PaginationComponent
+      <TablePagination
         currentPage={page}
-        totalPages={getAllProductsData?.page_count ?? 1}
-        onPageChange={(p) => setPage(p)}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
       />
 
       <ViewSaleProductModal
