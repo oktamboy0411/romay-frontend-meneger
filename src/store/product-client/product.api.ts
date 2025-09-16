@@ -34,7 +34,7 @@ export const productApi = baseApi.injectEndpoints({
     // New endpoint for rent products
     getAllRentProducts: builder.query<
       GetAllProductsResponse,
-      { page?: number; limit?: number; search?: string }
+      { page?: number; limit?: number; search?: string; branch?: string }
     >({
       query: (params) => ({
         url: '/product/rent-product/get-all',

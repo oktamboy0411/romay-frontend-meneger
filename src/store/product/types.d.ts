@@ -5,7 +5,7 @@ export interface GetAllProductsRequest {
   page?: number
   limit?: number
   search?: string
-  branch?: string
+  branch2?: string
 }
 
 // Category interface

@@ -7,15 +7,22 @@ import { useGetAllRentProductsQuery } from '@/store/product/product.api'
 import type { RentProduct } from '@/store/product/types'
 import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
-import { useGetRole } from '@/hooks/use-get-role'
-import { CheckRole } from '@/utils/checkRole'
 import CreateRentProduct from './addRentProduct'
+import { useGetBranch } from '@/hooks/use-get-branch'
 
 function RentPage() {
   const [page, setPage] = useState(1)
-  const { data: getAllRentsData } = useGetAllRentProductsQuery({ page })
+  const branch = useGetBranch()
+  console.log(branch?._id)
 
-  const role = useGetRole()
+  const { data: getAllRentsData } = useGetAllRentProductsQuery({
+    branch2: '123',
+    // branch: branch,
+  })
+
+  return ''
+
+  console.log('getAllRentsData', getAllRentsData)
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
@@ -52,11 +59,9 @@ function RentPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {CheckRole(role, ['manager', 'storekeeper']) && (
-            <Button onClick={() => setOpenAdd(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Mahsulot qo'shish
-            </Button>
-          )}
+          <Button onClick={() => setOpenAdd(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Mahsulot qo'shish
+          </Button>
           <div className="ml-2 flex rounded-md border border-[#E4E4E7] overflow-hidden">
             <Button
               variant={view === 'list' ? 'secondary' : 'ghost'}
@@ -83,13 +88,17 @@ function RentPage() {
           <table className="w-full">
             <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
               <tr>
+                <th className="px-6 py-3 text-left font-medium">Photo</th>
                 <th className="px-6 py-3 text-left font-medium">Nomi</th>
                 <th className="px-6 py-3 text-left font-medium">Status</th>
                 <th className="px-6 py-3 text-center font-medium">
                   Kategoriya
                 </th>
                 <th className="px-6 py-3 text-center font-medium">Bar-kod</th>
-                <th className="px-6 py-3 text-center font-medium">Filial</th>
+                <th className="px-6 py-3 text-center font-medium">
+                  Rent Price
+                </th>
+                <th className="px-6 py-3 text-center font-medium">Soni</th>
                 <th className="px-6 py-3 text-center font-medium">
                   Ijara narxi
                 </th>
@@ -103,35 +112,25 @@ function RentPage() {
                   onClick={() => handleProductClick(rent)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gray-100 rounded flex items-center overflow-hidden justify-center">
-                        {rent.product.images?.[0] ? (
-                          <img
-                            src={rent.product.images[0]}
-                            alt={rent.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-gray-400">📱</span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-[#18181B]">
-                          {rent.product.name || "Noma'lum"}
-                        </div>
-                      </div>
+                    <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
+                      {rent.product.images?.[0] ? (
+                        <img
+                          src={rent.product.images[0]}
+                          alt={rent.product.name}
+                          className="h-10 w-10 object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400">📱</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="text-sm font-medium text-[#18181B]">
+                      {rent.product.name || "Noma'lum"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    {rent.product_active_count > 0 ? (
-                      <span className="px-2 py-1 text-xs rounded-md bg-green-100 text-green-700">
-                        mavjud
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 text-xs rounded-md bg-red-100 text-red-700">
-                        qolmagan
-                      </span>
-                    )}
+                    {rent.product.status}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
@@ -144,8 +143,11 @@ function RentPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
+                    {rent.product_rent_price}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
-                      {rent.branch.name || '—'}
+                      {rent.product_active_count}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

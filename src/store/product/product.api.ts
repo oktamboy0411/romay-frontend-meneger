@@ -24,13 +24,19 @@ export const productApi = baseApi.injectEndpoints({
     }),
     getAllRentProducts: builder.query<
       GetAllRentProductsResponse,
-      GetAllProductsRequest
+      { page?: number; limit?: number; search?: string; branch2?: string }
     >({
-      query: (params) => ({
-        url: '/product/rent-product/get-all',
-        method: 'GET',
-        params,
-      }),
+      query: ({ branch2 }) => {
+        console.log('params', branch2)
+
+        return {
+          url: '/product/rent-product/get-all',
+          method: 'GET',
+          params: {
+            branch2,
+          },
+        }
+      },
       providesTags: ['products'],
     }),
 
