@@ -13,16 +13,11 @@ import { useGetBranch } from '@/hooks/use-get-branch'
 function RentPage() {
   const [page, setPage] = useState(1)
   const branch = useGetBranch()
-  console.log(branch?._id)
 
   const { data: getAllRentsData } = useGetAllRentProductsQuery({
-    branch2: '123',
-    // branch: branch,
+    page,
+    branch: branch?._id,
   })
-
-  return ''
-
-  console.log('getAllRentsData', getAllRentsData)
 
   const formatUsd = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
@@ -98,7 +93,7 @@ function RentPage() {
                 <th className="px-6 py-3 text-center font-medium">
                   Rent Price
                 </th>
-                <th className="px-6 py-3 text-center font-medium">Soni</th>
+                <th className="px-6 py-3 text-center font-medium">Filial</th>
                 <th className="px-6 py-3 text-center font-medium">
                   Ijara narxi
                 </th>

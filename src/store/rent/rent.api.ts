@@ -108,13 +108,14 @@ export const rentApi = baseApi.injectEndpoints({
       GetAllRentProductsResponse,
       GetAllRentProductsRequest
     >({
-      query: ({ search, page, limit } = {}) => ({
+      query: ({ search, page, limit, branch } = {}) => ({
         url: '/product/rent-product/get-all',
         method: 'GET',
         params: {
           ...(search && { search }),
           ...(page && { page }),
           ...(limit && { limit }),
+          ...(branch && { branch }),
         },
       }),
       providesTags: ['rentProducts'],
