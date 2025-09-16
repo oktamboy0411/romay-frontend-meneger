@@ -24,7 +24,7 @@ export default function SalePage() {
   const [openUpdate, setOpenUpdate] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedId, setSelectedID] = useState<string | undefined>()
+  const [selectedId, setSelectedID] = useState<string>('')
   const [limit, setLimit] = useState(10)
   const [openPopover, setOpenPopover] = useState<string>('')
   const msgError = useHandleError()
