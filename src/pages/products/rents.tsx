@@ -1,21 +1,35 @@
 import { Search, Plus, LayoutGrid, List } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { PaginationComponent } from '@/components/pagination'
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { useGetAllRentProductsQuery } from '@/store/product/product.api'
+import {
+  useDeleteRentProductMutation,
+  useGetAllRentProductsQuery,
+} from '@/store/product/product.api'
 import type { RentProduct } from '@/store/product/types'
 import { Button } from '@/components/ui/button'
 import { ProductDetailsModal } from '@/components/product-details-modal'
 import CreateRentProduct from './addRentProduct'
 import { useGetBranch } from '@/hooks/use-get-branch'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import { useHandleError } from '@/hooks/use-handle-error'
+import { toast } from 'sonner'
+import { TablePagination } from '@/components/TablePagination'
+import UpdateRentProduct from './editRentProduct'
 
 function RentPage() {
   const [page, setPage] = useState(1)
   const branch = useGetBranch()
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const msgError = useHandleError()
+  const [deleteRentProduct] = useDeleteRentProductMutation()
+  const [selectedId, setSelectedID] = useState<string>('')
+  const [limit, setLimit] = useState(10)
+  const [openUpdate, setOpenUpdate] = useState(false)
 
   const { data: getAllRentsData } = useGetAllRentProductsQuery({
     page,
+    limit,
     branch: branch?._id,
   })
 
@@ -26,7 +40,6 @@ function RentPage() {
 
   const [view, setView] = useState<'list' | 'grid'>('list')
   const [openAdd, setOpenAdd] = useState(false)
-  // const [products, setProducts] = useState<RentProduct[]>(dummyProducts)
   const [selectedProduct, setSelectedProduct] = useState<RentProduct | null>(
     null
   )
@@ -41,6 +54,9 @@ function RentPage() {
     setIsModalOpen(false)
     setSelectedProduct(null)
   }
+
+  const totalPages = getAllRentsData?.page_count || 1
+  const totalItems = getAllRentsData?.after_filtering_count || 0
 
   return (
     <div className="space-y-6">
@@ -97,15 +113,12 @@ function RentPage() {
                 <th className="px-6 py-3 text-center font-medium">
                   Ijara narxi
                 </th>
+                <th className="px-6 py-3 text-center font-medium">Ammallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {getAllRentsData?.data?.map((rent) => (
-                <tr
-                  key={rent._id}
-                  className="hover:bg-[#F9F9F9]"
-                  onClick={() => handleProductClick(rent)}
-                >
+                <tr key={rent._id} className="hover:bg-[#F9F9F9]">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
                       {rent.product.images?.[0] ? (
@@ -149,6 +162,26 @@ function RentPage() {
                     <div className="text-sm text-[#18181B]">
                       {formatUsd((rent.product_rent_price || 0).toString())}
                     </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <EditAndDeletePopover
+                      id={rent._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setSelectedID(rent._id)
+                        setOpenUpdate(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteRentProduct(rent._id).unwrap()
+                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -209,10 +242,23 @@ function RentPage() {
         }
       />
 
-      <PaginationComponent
+      <TablePagination
         currentPage={page}
-        totalPages={getAllRentsData?.page_count ?? 1}
-        onPageChange={(p) => setPage(p)}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
+      />
+
+      <UpdateRentProduct
+        open={openUpdate}
+        setOpen={setOpenUpdate}
+        id={selectedId}
       />
 
       <CreateRentProduct open={openAdd} setOpen={setOpenAdd} />
