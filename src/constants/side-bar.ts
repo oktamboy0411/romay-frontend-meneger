@@ -32,7 +32,7 @@ export const getSidebarGroups = (): SidebarGroup[] => {
   return [
     {
       label: 'Asosiy',
-      items: [{ title: 'Dashboard', icon: LayoutGrid, url: '/dashboard' }],
+      items: [{ title: 'Dashboard', icon: LayoutGrid, url: '/' }],
     },
     {
       label: 'Mijozlar va xodimlar',

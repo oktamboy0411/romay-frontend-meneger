@@ -19,7 +19,7 @@ export const AppRouter = () => {
       <Route path={'auth'}>
         <Route path={'login'} element={<LoginPage />} />
       </Route>
-      <Route path="dashboard" element={<PrivateRoute />}>
+      <Route path="/" element={<PrivateRoute />}>
         <Route index element={<DashboardPage />} />
       </Route>
       <Route path={'clients'} element={<PrivateRoute />}>
