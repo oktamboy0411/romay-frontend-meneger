@@ -8,7 +8,6 @@ import {
 } from '@/store/product/product.api'
 import type { RentProduct } from '@/store/product/types'
 import { Button } from '@/components/ui/button'
-import { ProductDetailsModal } from '@/components/product-details-modal'
 import CreateRentProduct from './addRentProduct'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
@@ -16,6 +15,7 @@ import { useHandleError } from '@/hooks/use-handle-error'
 import { toast } from 'sonner'
 import { TablePagination } from '@/components/TablePagination'
 import UpdateRentProduct from './editRentProduct'
+import ViewRentProductModal from './viewRentProduct'
 
 function RentPage() {
   const [page, setPage] = useState(1)
@@ -134,7 +134,7 @@ function RentPage() {
                   </td>
                   <td>
                     <div
-                      onClick={() => setIsModalOpen(true)}
+                      onClick={() => handleProductClick(rent)}
                       className="text-sm font-medium text-[#18181B] underline cursor-pointer"
                     >
                       {rent.product.name || "Noma'lum"}
@@ -197,7 +197,6 @@ function RentPage() {
             <Card
               key={`${rent._id}-${idx}`}
               className="overflow-hidden border border-[#E4E4E7] rounded-xl"
-              onClick={() => handleProductClick(rent)}
             >
               <CardContent className="p-3">
                 <div className="w-full h-36 flex items-center justify-center">
@@ -210,13 +209,26 @@ function RentPage() {
                     className="max-h-full object-contain"
                   />
                 </div>
-                <div className="mt-3">
+                <div className="mt-3 flex items-center justify-between">
                   <span className="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-orange-50 text-orange-600 border border-orange-100">
                     {rent.product.category_id?.name || '—'}
                   </span>
+                  <span
+                    className={
+                      ' inline-flex items-center border px-2.5 py-1 text-xs rounded-md ' +
+                      (rent.product.status === 'active'
+                        ? ' text-green-700 bg-green-50 border-green-100 *:'
+                        : ' text-red-700 bg-red-50 border-red-100 ')
+                    }
+                  >
+                    {rent.product.status || '—'}
+                  </span>
                 </div>
-                <div className="mt-2 text-base font-semibold leading-5 text-[#18181B] line-clamp-2">
-                  {rent.product.name}
+                <div className="mt-2 text-base font-semibold leading-5 text-[#18181B] line-clamp-2 flex items-center justify-between">
+                  <span>{rent.product.name}</span>
+                  <span>
+                    {rent.product_active_count}/{rent.product_total_count}
+                  </span>
                 </div>
                 <div className="text-sm text-[#71717A] mt-1">
                   {rent.product.description || rent.product.barcode || '—'}
@@ -224,25 +236,44 @@ function RentPage() {
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
                   {formatUsd((rent.product_rent_price || 0).toString())}
                 </div>
+                <div className="mt-2">
+                  <div className="flex gap-2 items-center justify-between">
+                    <Button
+                      onClick={() => handleProductClick(rent)}
+                      variant="outline"
+                    >
+                      view
+                    </Button>
+                    <EditAndDeletePopover
+                      id={rent._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setSelectedID(rent._id)
+                        setOpenUpdate(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteRentProduct(rent._id).unwrap()
+                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
-      <ProductDetailsModal
+      <ViewRentProductModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        product={
-          selectedProduct
-            ? {
-                _id: selectedProduct._id,
-                product: selectedProduct.product,
-                product_count: selectedProduct.product_active_count,
-                branch: selectedProduct.branch._id,
-              }
-            : null
-        }
+        product={selectedProduct}
       />
 
       <TablePagination
