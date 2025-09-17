@@ -30,8 +30,8 @@ import { toast } from 'sonner'
 import { useCreateRentProductMutation } from '@/store/product/product.api'
 import type { CreateProductRequest } from '@/store/product/types'
 import { useGetBranch } from '@/hooks/use-get-branch'
-import { useGetRentProductByBarcodeQuery } from '@/store/rent'
 import { useEffect } from 'react'
+import { useGetRentProductDetailByBarcodeQuery } from '@/store/product-barcode/product-barcode'
 
 type AttributeField = {
   key: string
@@ -62,9 +62,11 @@ interface RTKError {
 export default function CreateRentProduct({
   open,
   setOpen,
+  refetch,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  refetch: () => void
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
   const [uploadFile] = useUploadFileMutation()
@@ -87,28 +89,46 @@ export default function CreateRentProduct({
 
   // barcode kuzatish
   const sku = form.watch('barcode')
-  const { data: productData } = useGetRentProductByBarcodeQuery(sku, {
+  const { data: productData } = useGetRentProductDetailByBarcodeQuery(sku, {
     skip: !sku || sku.length < 4,
+    refetchOnMountOrArgChange: true,
   })
 
   // kelgan ma’lumotni forma ichiga to‘ldirish
   useEffect(() => {
     if (productData?.data) {
       const p = productData.data
-      form.setValue('name', p.product?.name || '')
-      form.setValue('category_id', p.product?.category_id || '')
-      form.setValue('product_count', p.product_total_count || 0)
-      form.setValue('product_rent_price', p.product_rent_price || 0)
-      form.setValue('description', p.product?.description || '')
+      form.setValue('name', p?.name || '')
+      form.setValue('category_id', p?.category_id || '')
+      form.setValue('product_count', 0)
+      form.setValue('product_rent_price', 0)
+      form.setValue('description', p.description || '')
       form.setValue(
         'attributes',
-        p.product?.attributes?.length
-          ? p.product.attributes
-          : [{ key: '', value: '' }]
+        p?.attributes?.length ? p.attributes : [{ key: '', value: '' }]
       )
-      form.setValue('images', p.product?.images || [])
+      form.setValue('images', p?.images || [])
     }
   }, [productData, sku])
+
+  useEffect(() => {
+    console.log(productData)
+
+    // barcode o'zgarganda boshqa fieldlar tozalanadi
+    if (sku) {
+      form.reset({
+        branch: branch?._id || '',
+        barcode: sku, // faqat barcode qoladi
+        name: '',
+        category_id: '',
+        product_count: 0,
+        product_rent_price: 0,
+        description: '',
+        images: [],
+        attributes: [{ key: '', value: '' }],
+      })
+    }
+  }, [sku]) // faqat sku o'zgarganda ishlaydi
 
   // atributlar uchun field array
   const { fields, append, remove } = useFieldArray({
@@ -145,6 +165,7 @@ export default function CreateRentProduct({
       await createRentProduct(body).unwrap()
       toast.success('Ijaraga mahsulot muvaffaqiyatli qo‘shildi')
       setOpen(false)
+      refetch()
     } catch (error) {
       const err = error as RTKError
       toast.error(
@@ -154,7 +175,13 @@ export default function CreateRentProduct({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(bool: boolean) => {
+        setOpen(bool)
+        form.reset()
+      }}
+    >
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ijaraga mahsulot qo‘shish</DialogTitle>
@@ -187,21 +214,32 @@ export default function CreateRentProduct({
                 <FormItem>
                   <FormLabel>Kategoriya</FormLabel>
                   <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={(val) => field.onChange(val)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kategoriya tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAllCategoriesData?.data?.map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {productData ? (
+                      <Input
+                        value={
+                          getAllCategoriesData?.data.find((item) => {
+                            return form.watch('category_id') === item._id
+                          })?.name
+                        }
+                        readOnly={true}
+                      />
+                    ) : (
+                      <Select
+                        value={field.value}
+                        onValueChange={(val) => field.onChange(val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kategoriya tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAllCategoriesData?.data?.map((category) => (
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,7 +254,11 @@ export default function CreateRentProduct({
                 <FormItem>
                   <FormLabel>Mahsulot nomi</FormLabel>
                   <FormControl>
-                    <Input placeholder="Excavator" {...field} />
+                    <Input
+                      readOnly={productData ? true : false}
+                      placeholder="Excavator"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -262,6 +304,7 @@ export default function CreateRentProduct({
                   <FormLabel>Izoh</FormLabel>
                   <FormControl>
                     <Input
+                      readOnly={productData ? true : false}
                       placeholder="Heavy duty excavator for rent"
                       {...field}
                     />

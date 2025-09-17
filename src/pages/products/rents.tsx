@@ -27,7 +27,7 @@ function RentPage() {
   const [limit, setLimit] = useState(10)
   const [openUpdate, setOpenUpdate] = useState(false)
 
-  const { data: getAllRentsData } = useGetAllRentProductsQuery({
+  const { data: getAllRentsData, refetch } = useGetAllRentProductsQuery({
     page,
     limit,
     branch: branch?._id,
@@ -109,7 +109,7 @@ function RentPage() {
                 <th className="px-6 py-3 text-center font-medium">
                   Rent Price
                 </th>
-                <th className="px-6 py-3 text-center font-medium">Filial</th>
+                <th className="px-6 py-3 text-center font-medium">soni</th>
                 <th className="px-6 py-3 text-center font-medium">
                   Ijara narxi
                 </th>
@@ -133,7 +133,10 @@ function RentPage() {
                     </div>
                   </td>
                   <td>
-                    <div className="text-sm font-medium text-[#18181B]">
+                    <div
+                      onClick={() => setIsModalOpen(true)}
+                      className="text-sm font-medium text-[#18181B] underline cursor-pointer"
+                    >
                       {rent.product.name || "Noma'lum"}
                     </div>
                   </td>
@@ -259,9 +262,14 @@ function RentPage() {
         open={openUpdate}
         setOpen={setOpenUpdate}
         id={selectedId}
+        refetch={() => refetch()}
       />
 
-      <CreateRentProduct open={openAdd} setOpen={setOpenAdd} />
+      <CreateRentProduct
+        open={openAdd}
+        setOpen={setOpenAdd}
+        refetch={() => refetch()}
+      />
     </div>
   )
 }

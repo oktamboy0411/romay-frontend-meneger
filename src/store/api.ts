@@ -36,6 +36,7 @@ const baseApi = createApi({
     'rents',
     'rentProducts',
     'product-detail',
+    'rent-products',
   ],
   endpoints: () => ({}),
 })

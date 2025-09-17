@@ -6,6 +6,7 @@ import type {
   CreateProductRequest,
   CreateProductResponse,
   UpdateProductRequest,
+  RentProductResponse,
 } from './types'
 
 export const productApi = baseApi.injectEndpoints({
@@ -44,7 +45,7 @@ export const productApi = baseApi.injectEndpoints({
       }),
       providesTags: ['products'],
     }),
-    getRentProductById: builder.query<CreateProductResponse, string>({
+    getRentProductById: builder.query<RentProductResponse, string>({
       query: (id) => ({
         url: `/product/rent-product/get/${id}`,
         method: 'GET',

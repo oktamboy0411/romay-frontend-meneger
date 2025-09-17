@@ -1,4 +1,3 @@
-import { FileUpload } from '@/components/ui/file-upload'
 import {
   Dialog,
   DialogContent,
@@ -17,46 +16,40 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useEffect } from 'react'
-
 import {
   useGetRentProductByIdQuery,
   useUpdateRentProductMutation,
 } from '@/store/product/product.api'
-import type { UpdateProductRequest } from '@/store/product/types'
-import { useGetAllCategoryQuery } from '@/store/category/category.api'
-import { useUploadFileMutation } from '@/store/upload/upload.api'
+import type { UpdateProductRequest, RentProduct } from '@/store/product/types'
 import { toast } from 'sonner'
 
 type FormValues = {
-  name: string
-  category_id: string
-  barcode: string
-  product_count: number | string
+  product_active_count: number | string
   product_rent_price: number | string
-  description?: string
-  image?: File | null
+}
+
+interface RTKError {
+  data?: {
+    error?: {
+      msg?: string
+    }
+  }
+  status?: number
 }
 
 export default function UpdateRentProduct({
   open,
   setOpen,
   id,
+  refetch,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
   id: string | undefined
+  refetch: () => void
 }) {
-  const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
   const [updateProduct] = useUpdateRentProductMutation()
-  const [uploadFile] = useUploadFileMutation()
 
   const { data: productData, isFetching } = useGetRentProductByIdQuery(id!, {
     skip: !id,
@@ -64,68 +57,33 @@ export default function UpdateRentProduct({
 
   const form = useForm<FormValues>({
     defaultValues: {
-      name: '',
-      category_id: '',
-      barcode: '',
-      product_count: 0,
+      product_active_count: 0,
       product_rent_price: 0,
-      description: '',
-      image: null,
     },
   })
 
   // Ma’lumot kelganda formni to‘ldirish
   useEffect(() => {
     if (productData?.data) {
-      const p = productData.data
+      const p: RentProduct = productData.data
       form.reset({
-        name: p.product.name,
-        category_id:
-          typeof p.product.category_id === 'string'
-            ? p.product.category_id
-            : p.product.category_id?._id,
-        barcode: p.product.barcode,
-        product_count: p.product_count ?? 0,
-        product_rent_price: p.product.price ?? 0,
-        description: p.product.description ?? '',
-        image: null,
+        product_active_count: p.product_active_count ?? 0,
+        product_rent_price: p.product_rent_price ?? 0,
       })
     }
   }, [productData])
 
-  interface RTKError {
-    data: {
-      error?: {
-        msg?: string
-      }
-    }
-    status?: number
-  }
-
   const onSubmit = async (values: FormValues) => {
     try {
-      let images: string[] = productData?.data?.product?.images || []
-
-      // Yangi rasm yuklangan bo‘lsa
-      if (values.image && values.image instanceof File) {
-        const uploadResponse = await uploadFile(values.image).unwrap()
-        images = [uploadResponse.file_path] // faqat yangi rasm
-      }
-
       const body: UpdateProductRequest = {
-        name: values.name,
-        category_id: values.category_id,
-        barcode: values.barcode,
-        product_count: Number(values.product_count),
+        product_count: Number(values.product_active_count),
         product_rent_price: Number(values.product_rent_price),
-        description: values.description,
-        images,
-        attributes: [], // hozircha bo‘sh jo‘natilyapti
       }
 
       await updateProduct({ id: id!, body }).unwrap()
       setOpen(false)
       toast.success('Ijaraga mahsulot muvaffaqiyatli yangilandi')
+      refetch()
     } catch (error) {
       const err = error as RTKError
       toast.error(
@@ -135,152 +93,109 @@ export default function UpdateRentProduct({
     }
   }
 
+  // RentProduct typeni oldik
+  const p: RentProduct | undefined = productData?.data
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ijaraga mahsulotni yangilash</DialogTitle>
           <DialogDescription>
-            Bu yerda mavjud ijaraga mahsulotni tahrirlay olasiz
+            Faqat miqdor va ijara narxini o‘zgartirishingiz mumkin
           </DialogDescription>
         </DialogHeader>
         {isFetching ? (
           <p className="text-center text-sm text-gray-500">Yuklanmoqda...</p>
         ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* IMAGE */}
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="sr-only">Mahsulot rasmi</FormLabel>
-                    <FormControl>
-                      <FileUpload
-                        value={(field.value as File | null) ?? null}
-                        onChange={(file) => field.onChange(file)}
-                        accept="image/*,application/pdf"
-                        maxSizeMB={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          p && (
+            <div className="space-y-4">
+              {/* ——— Faqat ko‘rsatiladigan ma’lumotlar ——— */}
+              <div>
+                <p className="text-sm text-gray-500">Kategoriya:</p>
+                <p className="font-medium">{p.product.category_id.name}</p>
+              </div>
 
-              {/* CATEGORY */}
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kategoriya</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={(val) => field.onChange(val)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategoriya tanlang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAllCategoriesData?.data?.map((category) => (
-                            <SelectItem key={category._id} value={category._id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <p className="text-sm text-gray-500">Mahsulot nomi:</p>
+                <p className="font-medium">{p.product.name}</p>
+              </div>
 
-              {/* NAME */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mahsulot nomi</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mahsulot nomi" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <p className="text-sm text-gray-500">Bar-kod:</p>
+                <p className="font-medium">{p.product.barcode}</p>
+              </div>
 
-              {/* BARCODE */}
-              <FormField
-                control={form.control}
-                name="barcode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bar-kod</FormLabel>
-                    <FormControl>
-                      <Input placeholder="020202020202" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <p className="text-sm text-gray-500">Izoh:</p>
+                <p className="font-medium">{p.product.description}</p>
+              </div>
 
-              {/* PRODUCT COUNT */}
-              <FormField
-                control={form.control}
-                name="product_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mahsulot miqdori</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0" inputMode="numeric" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Rasmlar */}
+              {p.product.images.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {p.product.images.map((img) => (
+                    <img
+                      key={img}
+                      src={img}
+                      alt="Product"
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  ))}
+                </div>
+              )}
 
-              {/* RENT PRICE */}
-              <FormField
-                control={form.control}
-                name="product_rent_price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ijara narxi</FormLabel>
-                    <FormControl>
-                      <Input placeholder="500" inputMode="decimal" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* ——— Faqat form bo‘ladigan qismlar ——— */}
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  {/* Mahsulot miqdori */}
+                  <FormField
+                    control={form.control}
+                    name="product_active_count"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mahsulot miqdori</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="0"
+                            inputMode="numeric"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* DESCRIPTION */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Izoh</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Mahsulot haqida qisqacha ma'lumot"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {/* Ijara narxi */}
+                  <FormField
+                    control={form.control}
+                    name="product_rent_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ijara narxi</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="500"
+                            inputMode="decimal"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <Button type="submit" className="w-full">
-                Yangilash
-              </Button>
-            </form>
-          </Form>
+                  <Button type="submit" className="w-full">
+                    Yangilash
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          )
         )}
       </DialogContent>
     </Dialog>

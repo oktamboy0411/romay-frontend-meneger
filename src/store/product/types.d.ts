@@ -120,6 +120,11 @@ export interface CreateProductResponse {
   msg?: string
   data?: Product
 }
+export interface RentProductResponse {
+  success: boolean
+  msg?: string
+  data?: RentProduct
+}
 
 // Update product request
 export interface UpdateProductRequest {
