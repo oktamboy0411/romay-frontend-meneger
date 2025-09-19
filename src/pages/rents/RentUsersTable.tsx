@@ -213,14 +213,13 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
                 <tr
                   key={rent._id}
                   className="hover:bg-[#F8F9FA] transition-colors cursor-pointer"
-                  onClick={() => onRentClick(rent._id)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
                       {rent.client_name}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {rent.client.phone}
+                      {rent.client ? rent.client.phone : ''}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

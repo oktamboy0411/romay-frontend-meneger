@@ -156,7 +156,7 @@ export default function RentDetailsModal({
               <div>
                 <div className="text-sm font-medium text-gray-700">Ism</div>
                 <div className="text-sm text-gray-900">
-                  {rent.client.username}
+                  {rent.client ? rent.client.username : ''}
                 </div>
               </div>
               <div>
@@ -164,7 +164,9 @@ export default function RentDetailsModal({
                   <Phone className="h-4 w-4" />
                   Telefon
                 </div>
-                <div className="text-sm text-gray-900">{rent.client.phone}</div>
+                <div className="text-sm text-gray-900">
+                  {rent.client ? rent.client.phone : ''}
+                </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-700 flex items-center gap-1">
@@ -172,16 +174,16 @@ export default function RentDetailsModal({
                   Manzil
                 </div>
                 <div className="text-sm text-gray-900">
-                  {rent.client.address}
+                  {rent.client ? rent.client.address : ''}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-700">Kasbi</div>
                 <div className="text-sm text-gray-900">
-                  {rent.client.profession}
+                  {rent.client ? rent.client.profession : ''}
                 </div>
               </div>
-              {rent.client.description && (
+              {rent.client && (
                 <div className="md:col-span-2">
                   <div className="text-sm font-medium text-gray-700">
                     Tavsif
@@ -296,7 +298,7 @@ export default function RentDetailsModal({
           </div>
 
           {/* Client Debt Information */}
-          {rent.client.debt && rent.client.debt.amount > 0 && (
+          {rent.client && rent.client.debt && rent.client.debt.amount > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-red-900 mb-2">
                 Mijoz qarzi

@@ -13,7 +13,7 @@ export default function Products() {
           </h1>
         </div>
         <TabsList>
-          <TabsTrigger value="products">Mahsulotlar</TabsTrigger>
+          <TabsTrigger value="products">sotuv mahsulotlari</TabsTrigger>
           <TabsTrigger value="rents">Ijara mahsulotlari</TabsTrigger>
         </TabsList>
       </div>
