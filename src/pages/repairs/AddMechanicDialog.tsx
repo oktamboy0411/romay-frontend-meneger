@@ -39,7 +39,10 @@ const addMechanicSchema = z.object({
     .min(2, "To'liq ism kamida 2 ta belgi"),
   phone: z
     .string({ required_error: 'Telefon raqamini kiriting' })
-    .regex(/^\+?\d[\d\s-]{7,}$/g, "Raqam formati noto'g'ri"),
+    .regex(
+      /^\+998\d{9}$/,
+      'Telefon raqam +998 bilan boshlanishi va 9 ta raqamdan iborat bo‘lishi kerak'
+    ),
   work_type: z.enum(['SERVICE', 'FIELD_SERVICE'], {
     required_error: 'Ish turini tanlang',
   }),
@@ -99,7 +102,12 @@ export default function AddMechanicDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              if (errors.phone) toast.error(errors.phone.message)
+            })}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="fullName"
@@ -134,19 +142,21 @@ export default function AddMechanicDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ish turi</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Ish turini tanlang" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="SERVICE">Xizmat</SelectItem>
-                      <SelectItem value="FIELD_SERVICE">
-                        Maydon xizmati
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Ish turini tanlang" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="SERVICE">Xizmat</SelectItem>
+                        <SelectItem value="FIELD_SERVICE">
+                          Tashqi xizmat
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

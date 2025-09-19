@@ -172,7 +172,7 @@ function MechanicsTable() {
                     >
                       {mechanic.work_type === 'SERVICE'
                         ? 'Xizmat'
-                        : 'Maydon xizmati'}
+                        : 'Tashqi xizmati'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">

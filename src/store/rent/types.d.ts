@@ -1,3 +1,5 @@
+import type { Category } from '../product/types'
+
 export type RentStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 
 export interface RentProduct {
@@ -178,7 +180,7 @@ export interface DetailedRentProduct {
     _id: string
     name: string
     description: string
-    category_id: string
+    category_id: Category
     status: string
     images: string[]
     barcode: string

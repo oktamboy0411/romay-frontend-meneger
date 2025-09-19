@@ -283,7 +283,7 @@ export default function RentProductDetailsModal({
             </div>
             <div>
               <span className="font-medium">Kategoriya ID:</span>{' '}
-              {product.product.category_id}
+              {product.product.category_id._id}
             </div>
           </div>
         </div>
