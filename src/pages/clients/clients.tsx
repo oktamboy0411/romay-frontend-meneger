@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button'
-import { useGetClientsQuery } from '@/store/clients/clients.api'
+import {
+  useDeleteClientMutation,
+  useGetClientsQuery,
+} from '@/store/clients/clients.api'
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +12,9 @@ import { useGetUser } from '@/hooks/useGetUser'
 import { SetLocation } from '@/hooks/setLocation'
 import { TablePagination } from '@/components/TablePagination'
 import { Input } from '@/components/ui/input'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import UpdateClientDialog from './UpdateClientDilalog'
+import { useHandleError } from '@/hooks/use-handle-error'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -35,6 +41,12 @@ function Clients() {
   const [currentPage, setCurrentPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [search, setSearch] = useState('')
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const [updateClientId, setUpdateClientId] = useState<string>('')
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const msgError = useHandleError()
+
+  const [deleteClient] = useDeleteClientMutation()
 
   const { data, isLoading, isError } = useGetClientsQuery({
     branch_id: me?.branch_id._id,
@@ -116,18 +128,18 @@ function Clients() {
                 <th className="px-6 py-3 text-center font-medium">
                   Buyurtmalar soni
                 </th>
-                <th className="px-6 py-3 text-center font-medium">Filial</th>
+                <th className="px-6 py-3 text-center font-medium">Tavsif</th>
+                <th className="px-6 py-3 text-center font-medium">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {clientsData?.map((c) => (
-                <tr
-                  key={c._id}
-                  className="hover:bg-[#F9F9F9] cursor-pointer"
-                  onClick={() => navigate(`client/${c._id}`)}
-                >
+                <tr key={c._id} className="hover:bg-[#F9F9F9] ">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-[#18181B]">
+                    <div
+                      onClick={() => navigate(`client/${c._id}`)}
+                      className="text-sm font-medium text-[#18181B] cursor-pointer underline"
+                    >
                       {c.username}
                     </div>
                   </td>
@@ -138,7 +150,7 @@ function Clients() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-[#18181B]">
-                      {c.profession || 'Mavjud emas'}
+                      {c.customer_tier || 'Mavjud emas'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -153,8 +165,28 @@ function Clients() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {c.branch_id.name || "Noma'lum"}
+                      {c.description || "Noma'lum"}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <EditAndDeletePopover
+                      id={c._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setUpdateClientId(c._id)
+                        setUpdateOpen(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteClient(c._id).unwrap()
+                          console.log('Sotuvchi o‘chirildi:', c._id)
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -173,6 +205,13 @@ function Clients() {
         />
       )}
       <AddClientDialog open={open} setOpen={setOpen} />
+      <UpdateClientDialog
+        open={updateOpen}
+        setOpen={function (open: boolean): void {
+          setUpdateOpen(open)
+        }}
+        id={updateClientId}
+      />
     </div>
   )
 }
