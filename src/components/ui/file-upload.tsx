@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { Upload } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -26,6 +26,18 @@ export function FileUpload({
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // ✅ File preview URL yaratish
+  useEffect(() => {
+    if (value && value instanceof File && value.type.startsWith('image/')) {
+      const url = URL.createObjectURL(value)
+      setPreviewUrl(url)
+      return () => URL.revokeObjectURL(url) // memory cleanup
+    } else {
+      setPreviewUrl(null)
+    }
+  }, [value])
 
   const openPicker = () => {
     if (disabled) return
@@ -117,8 +129,20 @@ export function FileUpload({
         </div>
         <Upload className="mt-2 text-[#A1A1AA]" />
         <div className="mt-4 text-xs text-[#A1A1AA]">{helperText}</div>
+
+        {/* ✅ preview qo‘shildi */}
+        {previewUrl && (
+          <div className="mt-3">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="h-24 w-24 object-cover rounded-md"
+            />
+          </div>
+        )}
+
         {value && (
-          <div className="mt-3 text-xs text-[#71717A]">
+          <div className="mt-2 text-xs text-[#71717A]">
             Tanlangan: <span className="font-medium">{value.name}</span>
           </div>
         )}
