@@ -10,11 +10,18 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useGetAllServicesQuery } from '@/store/service/service.api'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { useGetAllMechanicsQuery } from '@/store/mechanic/mechanic.api'
+import {
+  useDeleteMechanicMutation,
+  useGetAllMechanicsQuery,
+} from '@/store/mechanic/mechanic.api'
 import type { ServiceStatus } from '@/store/service/types'
 import { useGetRole } from '@/hooks/use-get-role'
 import { CheckRole } from '@/utils/checkRole'
 import AddMechanicDialog from './AddMechanicDialog'
+import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
+import { useHandleError } from '@/hooks/use-handle-error'
+import { TablePagination } from '@/components/TablePagination'
+import UpdateMechanicDialog from './UpdateMechanicDialog'
 
 // Utility functions
 const formatPrice = (price: number): string => {
@@ -30,8 +37,15 @@ function MechanicsTable() {
   const navigate = useNavigate()
   const userRole = useGetRole()
   const [currentPage, setCurrentPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [pageSize] = useState(10)
   const [selectedBranch, setSelectedBranch] = useState<string>('')
+  const [openPopover, setOpenPopover] = useState<string>('')
+  const [updateMechanicId, setUpdateMechanicId] = useState<string>('')
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const msgError = useHandleError()
+
+  const [deleteClient] = useDeleteMechanicMutation()
 
   // Check permissions for mechanic/get-all - ceo, manager, rent_cashier
   const canViewMechanics = CheckRole(userRole, [
@@ -40,11 +54,15 @@ function MechanicsTable() {
     'rent_cashier',
   ])
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
   const { data: branchesData, refetch: refetchBranches } =
     useGetAllBranchesQuery(
       {
         page: 1,
-        limit: 100,
+        limit,
       },
       {
         skip: true,
@@ -64,6 +82,10 @@ function MechanicsTable() {
       skip: !canViewMechanics,
     }
   )
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    setLimit(itemsPerPage)
+    setCurrentPage(1) // Reset to first page when items per page changes
+  }
 
   useEffect(() => {
     if (userRole === 'ceo') {
@@ -135,6 +157,7 @@ function MechanicsTable() {
               <th className="px-6 py-3 text-center font-medium">
                 Yaratilgan sana
               </th>
+              <th className="px-6 py-3 text-center font-medium">Amallar</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E4E4E7]">
@@ -185,6 +208,26 @@ function MechanicsTable() {
                       {formatDate(mechanic.created_at)}
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <EditAndDeletePopover
+                      id={mechanic._id}
+                      openPopover={openPopover}
+                      setOpenPopover={setOpenPopover}
+                      onClickUpdate={() => {
+                        setUpdateMechanicId(mechanic._id)
+                        setUpdateOpen(true)
+                      }}
+                      onClickDelete={async () => {
+                        try {
+                          await deleteClient(mechanic._id).unwrap()
+                          console.log('Sotuvchi o‘chirildi:', mechanic._id)
+                        } catch (error) {
+                          console.error('Xato:', error)
+                          msgError(error)
+                        }
+                      }}
+                    />
+                  </td>
                 </tr>
               ))
             )}
@@ -192,33 +235,24 @@ function MechanicsTable() {
         </table>
       </div>
 
-      {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Jami {pagination.total} ta natija, {pagination.page}-sahifa{' '}
-            {pagination.total_pages} sahifadan
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={!pagination.prev_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Oldingi
-            </button>
-            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded">
-              {pagination.page}
-            </span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={!pagination.next_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Keyingi
-            </button>
-          </div>
-        </div>
+      {pagination && (
+        <TablePagination
+          currentPage={pagination.page || 1}
+          totalPages={pagination.total_pages || 1}
+          totalItems={pagination.total || 0}
+          itemsPerPage={pagination.limit || 10}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       )}
+
+      <UpdateMechanicDialog
+        id={updateMechanicId}
+        open={updateOpen}
+        setOpen={function (open: boolean): void {
+          setUpdateOpen(open)
+        }}
+      />
     </div>
   )
 }
