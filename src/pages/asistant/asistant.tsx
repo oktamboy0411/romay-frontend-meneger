@@ -1,5 +1,5 @@
 import { TableSkeleton } from '../../components/ui/table-skeleton'
-import { AlertCircle, Search } from 'lucide-react'
+import { AlertCircle, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -63,6 +63,7 @@ function Assistants() {
           </div>
 
           <Button onClick={() => setOpen(true)} className="py-5">
+            <Plus className="h-4 w-4" />
             Yangi qo‘shish
           </Button>
         </div>

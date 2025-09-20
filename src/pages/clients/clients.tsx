@@ -3,7 +3,7 @@ import {
   useDeleteClientMutation,
   useGetClientsQuery,
 } from '@/store/clients/clients.api'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
@@ -87,6 +87,7 @@ function Clients() {
           onChange={(e) => handleSearchChange(e.target.value)}
         />
         <Button onClick={() => setOpen(true)} variant="default">
+          <Plus className="h-4 w-4" />
           Mijoz qo'shish
         </Button>
       </div>

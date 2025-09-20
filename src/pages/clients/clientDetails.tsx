@@ -2,7 +2,7 @@ import { SetLocation } from '@/hooks/setLocation'
 import { useGetOneClientQuery } from '@/store/clients/clients.api'
 import { useGetAllSalesQuery } from '@/store/sales-client/salesApi'
 import { format } from 'date-fns'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // Fixed money function with proper null checks
 function money(
@@ -31,6 +31,7 @@ export default function ClientDetails() {
     { client_id: id as string },
     { skip: !id }
   )
+  const navigate = useNavigate()
 
   SetLocation('Mijozlar > Mijoz haqida')
 
@@ -48,18 +49,47 @@ export default function ClientDetails() {
               title="Tug'ilgan sana"
               value={
                 data?.data?.birth_date
-                  ? format(
-                      new Date(data?.data?.birth_date || ''),
-                      'dd.MM.yyyy HH:mm'
-                    )
+                  ? format(new Date(data?.data?.birth_date), 'dd.MM.yyyy')
                   : ''
               }
             />
             <Info title="Filial" value={data?.data?.branch_id?.name || ''} />
             <Info title="Phone Number" value={data?.data?.phone || ''} />
             <Info title="Kasbi" value={data?.data?.profession || ''} />
-            <Info title="Mijoz Manzili" value={data?.data?.address || ''} />
+            <Info title="Manzili" value={data?.data?.address || ''} />
+
+            {/* qo‘shimcha maydonlar */}
+            <Info title="Izoh" value={data?.data?.description || ''} />
+            <Info
+              title="Filial manzili"
+              value={data?.data?.branch_id?.address || ''}
+            />
+            <Info
+              title="Mijoz darajasi"
+              value={data?.data?.customer_tier || ''}
+            />
+            <Info
+              title="Buyurtmalar soni"
+              value={data?.data?.sales_count?.toString() || '0'}
+            />
+            <Info
+              title="Ro‘yxatdan o‘tgan sana"
+              value={
+                data?.data?.created_at
+                  ? format(new Date(data?.data?.created_at), 'dd.MM.yyyy HH:mm')
+                  : ''
+              }
+            />
+            <Info
+              title="Yangilangan sana"
+              value={
+                data?.data?.updated_at
+                  ? format(new Date(data?.data?.updated_at), 'dd.MM.yyyy HH:mm')
+                  : ''
+              }
+            />
           </div>
+
           <div className="md:col-span-1">
             <div className="rounded-md border border-[#E4E4E7] p-5">
               <div className="text-sm text-[#71717A]">Balans</div>
@@ -80,11 +110,12 @@ export default function ClientDetails() {
           <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
             <tr>
               <th className="px-6 py-3 text-left font-medium">
-                Buyurtma sanasi
-              </th>
-              <th className="px-6 py-3 text-left font-medium">
                 Buyurtma raqami
               </th>
+              <th className="px-6 py-3 text-left font-medium">
+                Buyurtma sanasi
+              </th>
+              <th className="px-6 py-3 text-left font-medium">status</th>
               <th className="px-6 py-3 text-left font-medium">
                 Umumiy to'lov summasi
               </th>
@@ -98,6 +129,14 @@ export default function ClientDetails() {
             {client_items?.data?.map((o) => (
               <tr key={o._id} className="hover:bg-[#F9F9F9]">
                 <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <div
+                    onClick={() => navigate(`client/${o._id}`)}
+                    className="text-sm text-[#18181B] underline cursor-pointer"
+                  >
+                    {o?._id || 'N/A'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center whitespace-nowrap">
                   <div className="text-sm text-[#18181B]">
                     {o?.created_at
                       ? format(new Date(o.created_at), 'dd.MM.yyyy')
@@ -105,9 +144,7 @@ export default function ClientDetails() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm text-[#18181B]">
-                    {o?.payments?._id || 'N/A'}
-                  </div>
+                  <div className="text-sm text-[#18181B]">{o?.status}</div>
                 </td>
                 <td className="px-6 py-4 text-center whitespace-nowrap">
                   <div className="text-sm text-[#18181B]">
