@@ -10,10 +10,10 @@ import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import { PaginationComponent } from '@/components/pagination'
 import SaleDetailsDialog from './AddSalesDialog'
 import type { Sale } from '@/store/sales/types'
 import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
+import { TablePagination } from '@/components/TablePagination'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -39,6 +39,7 @@ function Sales() {
   const [cashier, setCashier] = useState('all')
   const [branch, setBranch] = useState('all')
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
   const [selectedSale, setSelectedSale] = useState<Sale>({
     _id: 'string',
@@ -64,6 +65,7 @@ function Sales() {
     ...(cashier !== 'all' && { cashier_id: cashier }),
     ...(branch !== 'all' && { branch_id: branch }),
     page,
+    limit,
   }
 
   const {
@@ -88,6 +90,8 @@ function Sales() {
     isError: isErrorCashiers,
   } = useGetCashiersQuery(cashierQueryParams)
 
+  const totalPages = pagination?.total_pages || 1
+  const totalItems = pagination?.total || 0
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -229,10 +233,17 @@ function Sales() {
         </div>
       )}
 
-      <PaginationComponent
+      <TablePagination
         currentPage={page}
-        onPageChange={setPage}
-        totalPages={pagination?.total_pages || 1}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
       />
 
       <SaleDetailsDialog
