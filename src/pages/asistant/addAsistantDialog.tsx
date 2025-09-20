@@ -29,7 +29,12 @@ type Props = {
 const addClientSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'),
   description: z.string().optional(),
-  phone: z.string().min(9, 'Telefon raqam kiritilishi shart'),
+  phone: z
+    .string()
+    .regex(
+      /^\+998\d{9}$/,
+      'Telefon raqam +998 bilan 9 ta raqamdan iborat bo‘lishi kerak'
+    ),
   branch_id: z.string().min(1, 'Filial tanlanishi shart'),
   address: z.string().optional(),
 })
@@ -69,7 +74,7 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Mijoz qo'shish</DialogTitle>
+          <DialogTitle>Sotuvchi qo'shish</DialogTitle>
           <p className="text-sm text-gray-500">Bu yerda mijoz qo'shasiz</p>
         </DialogHeader>
 

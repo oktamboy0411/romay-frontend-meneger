@@ -38,7 +38,12 @@ type Props = {
 // Schema – faqat kerakli maydonlar
 const addClientSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'),
-  phone: z.string().min(9, 'Telefon kiritilishi shart'),
+  phone: z
+    .string()
+    .regex(
+      /^\+998\d{9}$/,
+      'Telefon raqam +998 bilan 9 ta raqamdan iborat bo‘lishi kerak'
+    ),
   password: z.string().min(6, 'Parol kiritilishi shart'),
   address: z.string().optional(),
   branch_id: z.string().min(1, 'Filial tanlanishi shart'),
