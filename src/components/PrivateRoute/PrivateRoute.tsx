@@ -14,7 +14,8 @@ export const PrivateRoute = () => {
       </div>
     )
 
-  if (isError || !userData || !token) return <Navigate to={'/auth/login'} />
+  if (isError || !userData || !token || userData.data.role !== 'manager')
+    return <Navigate to={'/auth/login'} />
 
   return <Outlet />
 }

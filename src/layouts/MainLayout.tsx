@@ -15,7 +15,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { getSidebarGroups } from '@/constants/side-bar'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { User2 } from 'lucide-react'
 import { ChevronUp } from 'lucide-react'
 import {
@@ -31,8 +31,14 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const groups = getSidebarGroups()
 
   const { pathname } = useLocation()
+  const navigate = useNavigate()
 
   const hideSidebar = HIDE_SIDEBAR_ROUTES.includes(pathname)
+
+  const signOut = () => {
+    localStorage.clear()
+    navigate('/auth/login')
+  }
 
   if (hideSidebar) return children
 
@@ -91,7 +97,9 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
                   className="w-[--radix-popper-anchor-width]"
                 >
                   <DropdownMenuItem>
-                    <span>Sign out</span>
+                    <div onClick={signOut} className=" cursor-pointer">
+                      Sign out
+                    </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
