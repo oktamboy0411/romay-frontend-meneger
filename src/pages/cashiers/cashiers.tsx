@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -130,13 +129,7 @@ function Cashiers() {
                 <tr key={c._id} className="hover:bg-[#F9F9F9] cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
-                      <Link
-                        to={`/clients/${c._id}`}
-                        className="hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {c.username}
-                      </Link>
+                      {c.username}
                     </div>
                   </td>
 

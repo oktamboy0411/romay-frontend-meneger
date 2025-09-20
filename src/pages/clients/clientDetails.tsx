@@ -2,7 +2,10 @@ import { SetLocation } from '@/hooks/setLocation'
 import { useGetOneClientQuery } from '@/store/clients/clients.api'
 import { useGetAllSalesQuery } from '@/store/sales-client/salesApi'
 import { format } from 'date-fns'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import SaleDetailsDialog from '../sales/AddSalesDialog'
+import { useState } from 'react'
+import type { Sale } from '@/store/sales-client/types'
 
 // Fixed money function with proper null checks
 function money(
@@ -26,12 +29,31 @@ function money(
 
 export default function ClientDetails() {
   const id = useParams<{ id: string }>().id
+  const [open, setOpen] = useState(false)
   const { data } = useGetOneClientQuery(id as string, { skip: !id })
   const { data: client_items } = useGetAllSalesQuery(
     { client_id: id as string },
     { skip: !id }
   )
-  const navigate = useNavigate()
+  const [selectedSale, setSelectedSale] = useState<Sale>({
+    _id: 'string',
+    branch_id: { _id: 'string', name: 'string', address: 'string' },
+    cashier_id: { _id: 'string', username: 'string', phone: 'string' },
+    client_id: { _id: 'string', username: 'string', phone: 'string' },
+    sales_assistant_id: { _id: 'string', username: 'string', phone: 'string' },
+    items: [],
+    status: 'PENDING',
+    payments: {
+      total_amount: 0,
+      paid_amount: 0,
+      debt_amount: 0,
+      type: '',
+      currency: '',
+      _id: '',
+    },
+    created_at: '',
+    updated_at: '',
+  })
 
   SetLocation('Mijozlar > Mijoz haqida')
 
@@ -130,7 +152,10 @@ export default function ClientDetails() {
               <tr key={o._id} className="hover:bg-[#F9F9F9]">
                 <td className="px-6 py-4 text-center whitespace-nowrap">
                   <div
-                    onClick={() => navigate(`client/${o._id}`)}
+                    onClick={() => {
+                      setSelectedSale(o)
+                      setOpen(true)
+                    }}
                     className="text-sm text-[#18181B] underline cursor-pointer"
                   >
                     {o?._id || 'N/A'}
@@ -172,6 +197,11 @@ export default function ClientDetails() {
           </tbody>
         </table>
       </div>
+      <SaleDetailsDialog
+        open={open}
+        setOpen={setOpen}
+        saleData={selectedSale}
+      />
     </div>
   )
 }
