@@ -6,7 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,39 +28,14 @@ import {
 } from '@/components/ui/select'
 import { useGetAllCategoryQuery } from '@/store/category/category.api'
 import { useUploadFileMutation } from '@/store/upload/upload.api'
-import { toast } from 'sonner'
 import { useCreateRentProductMutation } from '@/store/product/product.api'
-import type { CreateProductRequest } from '@/store/product/types'
 import { useGetBranch } from '@/hooks/use-get-branch'
-import { useEffect } from 'react'
-import { useGetRentProductDetailByBarcodeQuery } from '@/store/product-barcode/product-barcode'
-import clsx from 'clsx'
-
-type AttributeField = {
-  key: string
-  value: string
-}
-
-type FormValues = {
-  branch: string
-  name: string
-  category_id: string
-  barcode: string
-  product_count: number | string
-  product_rent_price: number | string
-  description?: string
-  images: (File | string | null)[]
-  attributes: AttributeField[]
-}
-
-interface RTKError {
-  data?: {
-    error?: {
-      msg?: string
-    }
-  }
-  status?: number
-}
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { SERVER_URL } from '@/constants/server_url'
+import { getAuthToken } from '@/utils/auth'
+import type { RentProductDetail } from '@/store/product-barcode/types'
+import { useHandleError } from '@/hooks/use-handle-error'
 
 export default function CreateRentProduct({
   open,
@@ -70,117 +47,170 @@ export default function CreateRentProduct({
   refetch: () => void
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
-  const [uploadFile] = useUploadFileMutation()
   const [createRentProduct] = useCreateRentProductMutation()
+  const [uploadFile] = useUploadFileMutation()
   const branch = useGetBranch()
+  const msgError = useHandleError()
+  const [rentProductData, setBarcodeData] = useState<RentProductDetail | null>(
+    null
+  )
+  const [barcodeLoading, setBarcodeLoading] = useState(false)
+
+  // 🔹 Form Schema
+  const formSchema = z.object({
+    name: z.string().min(2, 'Kamida 2 ta belgi kiriting'),
+    category_id: z.string().min(1, 'Kategoriya majburiy'),
+    barcode: z.string().min(4, 'Bar-kod kamida 4 ta belgi'),
+    product_count: z
+      .union([z.string(), z.number()])
+      .transform((v) => Number(String(v).replace(/[^0-9]/g, ''))),
+    product_rent_price: z
+      .union([z.string(), z.number()])
+      .transform((v) => Number(String(v).replace(/[^0-9.]/g, '')))
+      .refine((v) => v >= 0, 'Ijara narxi 0 dan kichik bo‘lmasligi kerak'),
+    image: z.any().optional(),
+    description: z.string().optional(),
+  })
+
+  type FormValues = z.infer<typeof formSchema>
 
   const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      branch: branch?._id,
+      barcode: '',
       name: '',
       category_id: '',
-      barcode: '',
       product_count: 0,
       product_rent_price: 0,
+      image: [],
       description: '',
-      images: [],
-      attributes: [{ key: '', value: '' }],
     },
   })
 
-  // barcode kuzatish
-  const sku = form.watch('barcode')
-  const { data: productData } = useGetRentProductDetailByBarcodeQuery(sku, {
-    skip: !sku || sku.length < 4,
-    refetchOnMountOrArgChange: true,
-  })
+  const barcode = form.watch('barcode')
 
-  // kelgan ma’lumotni forma ichiga to‘ldirish
+  // 🔹 Barcode bo‘yicha fetch
   useEffect(() => {
-    if (productData?.data) {
-      const p = productData.data
-      form.setValue('name', p?.name || '')
-      form.setValue('category_id', p?.category_id || '')
+    const fetchBarcodeData = async (code: string) => {
+      if (!code || code.length < 4) return
+      setBarcodeLoading(true)
+      try {
+        const token = getAuthToken()
+        const response = await fetch(
+          `${SERVER_URL}/product-detail/rent-product/barcode/${code}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        )
+        const data = await response.json()
+        if (data?.data) {
+          setBarcodeData(data.data)
+        } else {
+          setBarcodeData(null)
+        }
+      } catch (err) {
+        console.error(err)
+        setBarcodeData(null)
+      } finally {
+        setBarcodeLoading(false)
+      }
+    }
+
+    if (barcode && barcode.length >= 4) {
+      fetchBarcodeData(barcode)
+    } else {
+      setBarcodeData(null)
+    }
+  }, [barcode])
+
+  // 🔹 Agar data kelsa formni to‘ldirish, bo‘lmasa tozalash
+  useEffect(() => {
+    if (rentProductData) {
+      const p = rentProductData
+      form.setValue('name', p.name || '')
+      form.setValue(
+        'category_id',
+        typeof p.category_id !== 'string'
+          ? p.category_id?._id
+          : p.category_id || ''
+      )
+      form.setValue('description', p.description || '')
       form.setValue('product_count', 0)
       form.setValue('product_rent_price', 0)
-      form.setValue('description', p.description || '')
-      form.setValue(
-        'attributes',
-        p?.attributes?.length ? p.attributes : [{ key: '', value: '' }]
+
+      if (p.images && p.images.length > 0) {
+        form.setValue('image', p.images[0])
+      }
+      toast.success('Barcode bo‘yicha mahsulot maʼlumoti topildi')
+    } else {
+      form.reset(
+        {
+          barcode: barcode || '',
+          name: '',
+          category_id: '',
+          product_count: 0,
+          product_rent_price: 0,
+          image: [],
+          description: '',
+        },
+        {
+          keepValues: false,
+          keepDefaultValues: false,
+        }
       )
-      form.setValue('images', p?.images || [])
     }
-  }, [productData, sku])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rentProductData])
 
-  useEffect(() => {
-    // barcode o'zgarganda boshqa fieldlar tozalanadi
-    if (sku) {
-      form.reset({
-        branch: branch?._id || '',
-        barcode: sku, // faqat barcode qoladi
-        name: '',
-        category_id: '',
-        product_count: 0,
-        product_rent_price: 0,
-        description: '',
-        images: [],
-        attributes: [{ key: '', value: '' }],
-      })
-    }
-  }, [sku])
+  const isReadOnly = barcode.length < 4 || !!rentProductData
+  const isFormDisabled = !barcode || barcode.length < 4
 
+  // 🔹 Submit
   const onSubmit = async (values: FormValues) => {
     try {
-      const imagePaths: string[] = []
-      for (const file of values.images) {
-        if (file instanceof File) {
-          const uploadResponse = await uploadFile(file).unwrap()
-          imagePaths.push(uploadResponse.file_path)
-        } else if (typeof file === 'string') {
-          imagePaths.push(file)
-        }
+      let imageUrl = ''
+      if (values.image && values.image instanceof File) {
+        const uploadResponse = await uploadFile(values.image).unwrap()
+        imageUrl = uploadResponse.file_path
+      } else if (typeof values.image === 'string') {
+        imageUrl = values.image
       }
 
-      const body: CreateProductRequest = {
-        branch: values.branch,
+      await createRentProduct({
+        branch: branch?._id || '',
         name: values.name,
+        category_id: values.category_id,
+        description: values.description,
         product_count: Number(values.product_count),
         product_rent_price: Number(values.product_rent_price),
-        description: values.description,
-        category_id: values.category_id,
-        images: imagePaths,
+        images: imageUrl ? [imageUrl] : [],
         barcode: values.barcode,
-        attributes: values.attributes.filter(
-          (a) => a.key.trim() !== '' && a.value.trim() !== ''
-        ),
-      }
+        attributes: [],
+      }).unwrap()
 
-      await createRentProduct(body).unwrap()
       toast.success('Ijaraga mahsulot muvaffaqiyatli qo‘shildi')
       setOpen(false)
+      form.reset()
       refetch()
     } catch (error) {
-      const err = error as RTKError
-      toast.error(
-        err?.data?.error?.msg || 'Ijaraga mahsulot qo‘shishda xatolik yuz berdi'
-      )
+      msgError(error)
     }
   }
 
-  const isBarcodeValid = sku && sku.length >= 4 ? true : false
-  const isProductFound = !!productData?.data
-
-  console.log(isBarcodeValid, isProductFound)
+  useEffect(() => {
+    if (!open) {
+      form.reset()
+      setBarcodeData(null)
+    }
+  }, [open])
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(bool: boolean) => {
-        setOpen(bool)
-        form.reset()
-      }}
-    >
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-[480px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ijaraga mahsulot qo‘shish</DialogTitle>
           <DialogDescription>
@@ -199,176 +229,180 @@ export default function CreateRentProduct({
                   <FormControl>
                     <Input placeholder="9876543210987" {...field} />
                   </FormControl>
-                  <FormMessage />
-                  {isBarcodeValid && (
-                    <div
-                      className={clsx(
-                        'text-xs mt-1',
-                        isProductFound ? 'text-green-600' : 'text-red-600'
+                  <div className="text-sm mt-1">
+                    {barcodeLoading && (
+                      <span className="text-blue-500">
+                        Ma'lumot yuklanmoqda...
+                      </span>
+                    )}
+                    {!barcodeLoading &&
+                      barcode?.length >= 4 &&
+                      rentProductData && (
+                        <span className="text-green-500">
+                          Ma'lumot topildi ✅
+                        </span>
                       )}
-                    >
-                      {isProductFound
-                        ? "Mahsulot ma'lumotlari yuklandi ✅"
-                        : 'Bu bar-kod bo‘yicha mahsulot topilmadi ❌'}
-                    </div>
-                  )}
-                </FormItem>
-              )}
-            />
-
-            {/* CATEGORY */}
-            <FormField
-              control={form.control}
-              name="category_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kategoriya</FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={isBarcodeValid && isProductFound} // barcode topilsa select disabled
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kategoriya tanlang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAllCategoriesData?.data?.map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* NAME */}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mahsulot nomi</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Excavator"
-                      {...field}
-                      readOnly={isBarcodeValid && !isProductFound}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* COUNT */}
-            <FormField
-              control={form.control}
-              name="product_count"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Miqdori</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="10"
-                      inputMode="numeric"
-                      {...field}
-                      readOnly={isBarcodeValid}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* RENT PRICE */}
-            <FormField
-              control={form.control}
-              name="product_rent_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ijara narxi</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="500"
-                      inputMode="decimal"
-                      {...field}
-                      disabled={isBarcodeValid}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* DESCRIPTION */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Izoh</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Heavy duty excavator for rent"
-                      {...field}
-                      readOnly={isProductFound}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* IMAGES */}
-            <FormItem>
-              <FormLabel>Rasmlar</FormLabel>
-              <div className="space-y-2">
-                {(() => {
-                  const images = form.watch('images') || []
-                  const file = images[0] // faqat birinchi element
-
-                  return (
-                    <FormField
-                      control={form.control}
-                      name="images"
-                      render={({ field }) => (
-                        <FormControl>
-                          {file && typeof file === 'string' ? (
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={file}
-                                alt="Uploaded preview"
-                                className="h-20 w-20 object-cover rounded-md"
-                              />
-                            </div>
-                          ) : (
-                            <FileUpload
-                              value={file instanceof File ? file : null}
-                              onChange={(newFile) => {
-                                const updated = [newFile]
-                                field.onChange(updated)
-                              }}
-                              disabled={isProductFound}
-                              accept="image/*,application/pdf"
-                              maxSizeMB={10}
-                            />
-                          )}
-                        </FormControl>
+                    {!barcodeLoading &&
+                      barcode?.length >= 4 &&
+                      !rentProductData && (
+                        <span className="text-red-500">
+                          Ma'lumot topilmadi ❌
+                        </span>
                       )}
-                    />
-                  )
-                })()}
-              </div>
-            </FormItem>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <Button type="submit" className="w-full">
-              Qo‘shish
-            </Button>
+            <fieldset disabled={isFormDisabled} className="space-y-4">
+              {/* IMAGE */}
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="sr-only">Mahsulot rasmi</FormLabel>
+                    <FormControl>
+                      {typeof field.value === 'string' && field.value !== '' ? (
+                        <div className="space-y-2">
+                          <img
+                            src={
+                              field.value.startsWith('http')
+                                ? field.value
+                                : `${SERVER_URL}/${field.value}`
+                            }
+                            alt="Mahsulot rasmi"
+                            className="h-32 w-32 object-cover rounded-md border"
+                          />
+                        </div>
+                      ) : (
+                        <FileUpload
+                          value={(field.value as File | null) ?? null}
+                          onChange={(file) => field.onChange(file)}
+                          accept="image/*,application/pdf"
+                          maxSizeMB={10}
+                          disabled={isReadOnly}
+                        />
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* CATEGORY */}
+              <FormField
+                control={form.control}
+                name="category_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kategoriya</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={isReadOnly}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kategoriya tanlang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAllCategoriesData?.data?.map((category) => (
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* NAME */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mahsulot nomi</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isReadOnly}
+                        placeholder="Mahsulot nomi"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* COUNT */}
+              <FormField
+                control={form.control}
+                name="product_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Miqdori</FormLabel>
+                    <FormControl>
+                      <Input
+                        readOnly={isReadOnly}
+                        placeholder="10"
+                        inputMode="numeric"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* RENT PRICE */}
+              <FormField
+                control={form.control}
+                name="product_rent_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ijara narxi</FormLabel>
+                    <FormControl>
+                      <Input
+                        readOnly={isReadOnly}
+                        placeholder="500"
+                        inputMode="decimal"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* DESCRIPTION */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Izoh</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isReadOnly}
+                        placeholder="Mahsulot haqida qisqacha ma'lumot"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full">
+                Qo‘shish
+              </Button>
+            </fieldset>
           </form>
         </Form>
       </DialogContent>

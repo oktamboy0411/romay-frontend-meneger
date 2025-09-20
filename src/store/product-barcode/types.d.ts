@@ -1,3 +1,5 @@
+import type { Category } from '../category/types'
+
 // Attributes (siz bergan)
 export interface ProductAttribute {
   key: string
@@ -10,7 +12,7 @@ export interface SaleProductDetail {
   _id: string
   name: string
   description: string
-  category_id: string // faqat id kelayapti
+  category_id: Category | string // faqat id kelayapti
   price: number // faqat sale product
   status: string
   currency: string // faqat sale product
@@ -27,7 +29,7 @@ export interface RentProductDetail {
   _id: string
   name: string
   description: string
-  category_id: string // faqat id kelayapti
+  category_id: Category | string
   status: string
   images: string[]
   barcode: string

@@ -31,9 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useEffect } from 'react'
-import { useGetSaleProductDetailByBarcodeQuery } from '@/store/product-barcode/product-barcode'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { SERVER_URL } from '@/constants/server_url'
+import { getAuthToken } from '@/utils/auth'
+import type { SaleProductDetail } from '@/store/product-barcode/types'
 
 export default function AddSaleProduct({
   open,
@@ -44,9 +46,14 @@ export default function AddSaleProduct({
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
   const [createProduct] = useCreateSaleProductMutation()
+  const [saleProductData, setBarcodeData] = useState<SaleProductDetail | null>(
+    null
+  )
+  const [barcodeLoading, setBarcodeLoading] = useState<boolean>(false)
   const [uploadFile] = useUploadFileMutation()
   const branch = useGetBranch()
 
+  // 🔹 Form Schema
   const formSchema = z.object({
     name: z.string().min(2, 'Kamida 2 ta belgi kiriting'),
     category: z.string().min(1, 'Kategoriya majburiy'),
@@ -75,7 +82,7 @@ export default function AddSaleProduct({
       category: '',
       price: 0,
       minQty: 0,
-      image: undefined,
+      image: [],
       subtitle: '',
       currency: 'UZS',
       status: 'Active',
@@ -85,37 +92,89 @@ export default function AddSaleProduct({
 
   const sku = form.watch('sku')
 
-  // barcode bo‘yicha ma’lumot olish
-  const { data: saleProductData } = useGetSaleProductDetailByBarcodeQuery(sku, {
-    skip: !sku || sku.length < 4,
-  })
-
-  // barcode o‘zgarganda formni tozalash va yangi kelgan malumotni joylash
+  // 🔹 Barcode bo‘yicha fetch
   useEffect(() => {
-    if (saleProductData?.data) {
-      const product = saleProductData.data
+    const fetchBarcodeData = async (barcode: string) => {
+      if (!barcode || barcode.length < 4) return
+      setBarcodeLoading(true)
+      try {
+        const token = getAuthToken()
+        const response = await fetch(
+          `${SERVER_URL}/product-detail/sale-product/barcode/${barcode}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        )
+        const data = await response.json()
+        if (data?.data) {
+          setBarcodeData(data.data)
+        } else {
+          setBarcodeData(null)
+        }
+      } catch (error) {
+        console.error('Barcode lookup error:', error)
+        setBarcodeData(null)
+      } finally {
+        setBarcodeLoading(false)
+      }
+    }
+
+    if (sku && sku.length >= 4) {
+      fetchBarcodeData(sku)
+    } else {
+      setBarcodeData(null)
+    }
+  }, [sku])
+
+  // 🔹 Agar data kelsa formni to‘ldirish, bo‘lmasa tozalash
+  useEffect(() => {
+    if (saleProductData) {
+      const product = saleProductData
       form.setValue('name', product.name || '')
-      form.setValue('category', product.category_id || '')
+      form.setValue(
+        'category',
+        typeof product.category_id !== 'string'
+          ? product.category_id?._id
+          : product.category_id
+            ? product.category_id
+            : ''
+      )
       form.setValue('price', product.price || 0)
       form.setValue('note', product.description || '')
       form.setValue('currency', product.currency || 'UZS')
       form.setValue('status', product.status || 'Active')
+      toast.success('Barcode bo‘yicha mahsulot maʼlumoti topildi')
+
+      if (product.images && product.images.length > 0) {
+        form.setValue('image', product.images[0]) // birinchi rasmni olayapmiz
+      }
     } else {
-      // agar yo‘q bo‘lsa boshqa maydonlarni tozalab qo‘yish
-      form.reset({
-        sku: sku || '',
-        name: '',
-        category: '',
-        price: 0,
-        minQty: 0,
-        image: undefined,
-        subtitle: '',
-        currency: 'UZS',
-        status: 'Active',
-        note: '',
-      })
+      form.reset(
+        {
+          sku: sku || '',
+          name: '',
+          category: '',
+          price: 0,
+          minQty: 0,
+          image: [],
+          subtitle: '',
+          currency: 'UZS',
+          status: 'Active',
+          note: '',
+        },
+        {
+          keepValues: false,
+          keepDefaultValues: false,
+        }
+      )
+      toast.error('Bu barcode bo‘yicha mahsulot topilmadi')
     }
-  }, [saleProductData, sku])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleProductData])
 
   interface RTKError {
     data: {
@@ -126,6 +185,10 @@ export default function AddSaleProduct({
     status?: number
   }
 
+  const isReadOnly = sku.length < 4 || !!saleProductData
+  const isReadOnlyForNumbers = sku.length < 4
+
+  // 🔹 Submit
   const onSubmit = async (values: FormValues) => {
     try {
       let imageUrl = ''
@@ -160,6 +223,31 @@ export default function AddSaleProduct({
     }
   }
 
+  useEffect(() => {
+    if (!open) {
+      // Dialog yopilganda formani tozalash
+      form.reset(
+        {
+          sku: sku || '',
+          name: '',
+          category: '',
+          price: 0,
+          minQty: 0,
+          image: [],
+          subtitle: '',
+          currency: 'UZS',
+          status: 'Active',
+          note: '',
+        },
+        {
+          keepValues: false,
+          keepDefaultValues: false,
+        }
+      )
+      setBarcodeData(null)
+    }
+  }, [open])
+
   const isFormDisabled = !sku || sku.length < 4
 
   return (
@@ -181,6 +269,28 @@ export default function AddSaleProduct({
                   <FormControl>
                     <Input placeholder="020202020202" {...field} />
                   </FormControl>
+
+                  {/* 🔹 Barcode xabarlari */}
+                  <div className="text-sm mt-1">
+                    {barcodeLoading && (
+                      <span className="text-blue-500">
+                        Ma'lumot yuklanmoqda...
+                      </span>
+                    )}
+                    {!barcodeLoading && sku?.length >= 4 && saleProductData && (
+                      <span className="text-green-500">
+                        Ma'lumot topildi ✅
+                      </span>
+                    )}
+                    {!barcodeLoading &&
+                      sku?.length >= 4 &&
+                      !saleProductData && (
+                        <span className="text-red-500">
+                          Ma'lumot topilmadi ❌
+                        </span>
+                      )}
+                  </div>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -195,12 +305,27 @@ export default function AddSaleProduct({
                   <FormItem>
                     <FormLabel className="sr-only">Mahsulot rasmi</FormLabel>
                     <FormControl>
-                      <FileUpload
-                        value={(field.value as File | null) ?? null}
-                        onChange={(file) => field.onChange(file)}
-                        accept="image/*,application/pdf"
-                        maxSizeMB={10}
-                      />
+                      {typeof field.value === 'string' && field.value !== '' ? (
+                        <div className="space-y-2">
+                          <img
+                            src={
+                              field.value.startsWith('http')
+                                ? field.value
+                                : `${SERVER_URL}/${field.value}`
+                            }
+                            alt="Mahsulot rasmi"
+                            className="h-32 w-32 object-cover rounded-md border"
+                          />
+                        </div>
+                      ) : (
+                        <FileUpload
+                          value={(field.value as File | null) ?? null}
+                          onChange={(file) => field.onChange(file)}
+                          accept="image/*,application/pdf"
+                          maxSizeMB={10}
+                          disabled={isReadOnly}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,6 +343,7 @@ export default function AddSaleProduct({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={isReadOnly}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Kategoriya tanlang" />
@@ -244,7 +370,11 @@ export default function AddSaleProduct({
                   <FormItem>
                     <FormLabel>Mahsulot nomi</FormLabel>
                     <FormControl>
-                      <Input placeholder="Mahsulot nomi" {...field} />
+                      <Input
+                        disabled={isReadOnly}
+                        placeholder="Mahsulot nomi"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -259,7 +389,12 @@ export default function AddSaleProduct({
                   <FormItem>
                     <FormLabel>Narxi</FormLabel>
                     <FormControl>
-                      <Input placeholder="10" inputMode="decimal" {...field} />
+                      <Input
+                        readOnly={isReadOnlyForNumbers}
+                        placeholder="10"
+                        inputMode="decimal"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,7 +409,12 @@ export default function AddSaleProduct({
                   <FormItem>
                     <FormLabel>Minimal miqdori</FormLabel>
                     <FormControl>
-                      <Input placeholder="0" inputMode="numeric" {...field} />
+                      <Input
+                        readOnly={isReadOnlyForNumbers}
+                        placeholder="0"
+                        inputMode="numeric"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -290,6 +430,7 @@ export default function AddSaleProduct({
                     <FormLabel>Izoh</FormLabel>
                     <FormControl>
                       <Input
+                        disabled={isReadOnly}
                         placeholder="Mahsulot haqida qisqacha ma'lumot"
                         {...field}
                       />
