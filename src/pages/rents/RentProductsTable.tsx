@@ -15,6 +15,7 @@ import type { RentProductDetail } from '@/store/rent/types'
 import { useGetRole } from '@/hooks/use-get-role'
 import { CheckRole } from '@/utils/checkRole'
 import { useNavigate } from 'react-router-dom'
+import { useGetBranch } from '@/hooks/use-get-branch'
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('uz-UZ').format(price)
@@ -37,6 +38,7 @@ export default function RentProductsTable({
   const [pageSize] = useState(10)
   const [selectedBranch, setSelectedBranch] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  const branch = useGetBranch()
 
   const canViewRents = CheckRole(userRole, [
     'ceo',
@@ -59,6 +61,7 @@ export default function RentProductsTable({
       search: searchTerm || undefined,
       page: currentPage,
       limit: pageSize,
+      branch: branch?._id,
     },
     { skip: !canViewRents }
   )
