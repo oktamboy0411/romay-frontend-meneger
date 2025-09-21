@@ -204,6 +204,7 @@ export default function AddSaleProduct({
       await createProduct(productPayload).unwrap()
 
       toast.success('Mahsulot muvaffaqiyatli yaratildi')
+      refetch()
       setOpen(false)
       form.reset()
     } catch (error) {
