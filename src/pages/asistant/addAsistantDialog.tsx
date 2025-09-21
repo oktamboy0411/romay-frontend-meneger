@@ -19,6 +19,7 @@ import { z } from 'zod'
 import { useAddAssistantMutation } from '@/store/asistant/asistant.api'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import { useHandleError } from '@/hooks/use-handle-error'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -61,11 +62,10 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
   const onSubmit = async (values: AddClientValues) => {
     try {
       await addSaleAssistant(values).unwrap()
-      console.log('Mijoz qo‘shildi:', values)
+      toast.success('Sotuvchi muvaffaqiyatli qo‘shildi')
       setOpen(false)
       form.reset()
     } catch (error) {
-      console.error('Xato:', error)
       msgError(error)
     }
   }

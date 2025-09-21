@@ -23,6 +23,7 @@ import {
 import { useGetBranch } from '@/hooks/use-get-branch'
 import { useHandleError } from '@/hooks/use-handle-error'
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -72,11 +73,10 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
   const onSubmit = async (values: AddClientValues) => {
     try {
       await updateAssistant({ id, body: values }).unwrap()
-      console.log('Mijoz yangilandi:', values)
+      toast.success('Sotuvchi muvaffaqiyatli yangilandi')
       setOpen(false)
       form.reset()
     } catch (error) {
-      console.error('Xato:', error)
       msgError(error)
     }
   }
@@ -85,8 +85,10 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Mijoz yangilash</DialogTitle>
-          <p className="text-sm text-gray-500">Bu yerda mijozni yangilaysiz</p>
+          <DialogTitle>Sotuvchini yangilash</DialogTitle>
+          <p className="text-sm text-gray-500">
+            Bu yerda sotuvchini yangilaysiz
+          </p>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

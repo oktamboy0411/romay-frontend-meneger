@@ -15,6 +15,7 @@ import UpdateAssistantDialog from './updateAssistantDialog'
 import { useHandleError } from '@/hooks/use-handle-error'
 import { format } from 'date-fns'
 import { TablePagination } from '@/components/TablePagination'
+import { toast } from 'sonner'
 
 function Assistants() {
   const [search, setSearch] = useState('')
@@ -149,10 +150,9 @@ function Assistants() {
                       onClickDelete={async () => {
                         try {
                           await deleteAssistant(a._id).unwrap()
-                          console.log('Sotuvchi o‘chirildi:', a._id)
+                          toast.success('Sotuvchi muvaffaqiyatli o‘chirildi')
                           setOpen(false)
                         } catch (error) {
-                          console.error('Xato:', error)
                           msgError(error)
                         }
                       }}
