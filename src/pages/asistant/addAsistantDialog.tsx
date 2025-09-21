@@ -27,7 +27,7 @@ type Props = {
 }
 
 // ✅ Schema yangi JSON ma’lumotga mos
-const addClientSchema = z.object({
+const addAssistantSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'),
   description: z.string().optional(),
   phone: z
@@ -40,7 +40,7 @@ const addClientSchema = z.object({
   address: z.string().optional(),
 })
 
-type AddClientValues = z.infer<typeof addClientSchema>
+type AddAssistantValues = z.infer<typeof addAssistantSchema>
 
 export default function AddAsistantDialog({ open, setOpen }: Props) {
   const branch = useGetBranch()
@@ -48,8 +48,8 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
   const [addSaleAssistant] = useAddAssistantMutation()
 
   // form
-  const form = useForm<AddClientValues>({
-    resolver: zodResolver(addClientSchema),
+  const form = useForm<AddAssistantValues>({
+    resolver: zodResolver(addAssistantSchema),
     defaultValues: {
       username: '',
       description: '',
@@ -59,7 +59,7 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
     },
   })
 
-  const onSubmit = async (values: AddClientValues) => {
+  const onSubmit = async (values: AddAssistantValues) => {
     try {
       await addSaleAssistant(values).unwrap()
       toast.success('Sotuvchi muvaffaqiyatli qo‘shildi')
