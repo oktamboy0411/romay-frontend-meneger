@@ -44,7 +44,7 @@ export default function AddSaleProduct({
 }: {
   open: boolean
   setOpen: (open: boolean) => void
-  refetch?: () => void
+  refetch: () => void
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
   const [createProduct] = useCreateSaleProductMutation()
