@@ -29,6 +29,7 @@ import { useGetBranch } from '@/hooks/use-get-branch'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -73,10 +74,11 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
   const onSubmit = async (values: AddCashierValues) => {
     try {
       await addCashier(values).unwrap()
-      console.log('Kassir qo‘shildi:', values)
+      toast.success('Muvaffaqiyat! Kassir muvaffaqiyatli qo‘shildi.')
       setOpen(false)
       form.reset()
     } catch (error) {
+      toast.error('Xatolik! Kassirni qo‘shishda xatolik yuz berdi.')
       console.error('Xato:', error)
     }
   }

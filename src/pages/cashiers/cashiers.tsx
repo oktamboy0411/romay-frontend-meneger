@@ -9,10 +9,10 @@ import {
 } from '@/store/cashiers/cashiers'
 import { format } from 'date-fns'
 import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
-import { useHandleError } from '@/hooks/use-handle-error'
 import AddCashierDialog from './AddCashierDialog'
 import UpdateCashierDialog from './UpdateCashierDialog'
 import { TablePagination } from '@/components/TablePagination'
+import { toast } from 'sonner'
 
 function Cashiers() {
   const [searchFilter, setSearchFilter] = useState('')
@@ -23,7 +23,6 @@ function Cashiers() {
   const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
-  const msgError = useHandleError()
   const [deleteCashier] = useDeleteCashierMutation()
 
   const queryParams = {
@@ -34,13 +33,23 @@ function Cashiers() {
   }
 
   const {
-    data: { data: clientsData = [], pagination } = {},
+    data: { data: cashierData = [], pagination } = {},
     isLoading,
     isError,
   } = useGetCashiersQuery(queryParams)
 
   const totalPages = pagination?.total_pages || 1
   const totalItems = pagination?.total || 0
+
+  const handleDeleteCashier = async (cashierId: string) => {
+    try {
+      await deleteCashier(cashierId).unwrap()
+      toast.success('Muvaffaqiyat! Kassir muvaffaqiyatli o‘chirildi.')
+    } catch (error) {
+      toast.error('Xatolik! Kassirni o‘chirishda xatolik yuz berdi.')
+      console.error('Xato:', error)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -99,7 +108,7 @@ function Cashiers() {
             ko'ring.
           </p>
         </div>
-      ) : clientsData.length === 0 ? (
+      ) : cashierData.length === 0 ? (
         <div className="border border-[#E4E4E7] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-gray-400" />
           <p className="text-lg text-gray-600">Kassirlar topilmadi</p>
@@ -125,7 +134,7 @@ function Cashiers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
-              {clientsData?.map((c) => (
+              {cashierData?.map((c) => (
                 <tr key={c._id} className="hover:bg-[#F9F9F9] cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
@@ -168,13 +177,7 @@ function Cashiers() {
                         setUpdateOpen(true)
                       }}
                       onClickDelete={async () => {
-                        try {
-                          await deleteCashier(c._id).unwrap()
-                          console.log('Sotuvchi o‘chirildi:', c._id)
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
+                        handleDeleteCashier(c._id)
                       }}
                     />
                   </td>

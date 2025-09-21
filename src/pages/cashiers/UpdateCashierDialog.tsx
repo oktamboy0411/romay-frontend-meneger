@@ -32,6 +32,7 @@ import { useGetBranch } from '@/hooks/use-get-branch'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 type Props = {
   open: boolean
@@ -40,7 +41,7 @@ type Props = {
 }
 
 // Schema – faqat kerakli maydonlar
-const addClientSchema = z.object({
+const addCashierSchema = z.object({
   username: z.string().min(2, 'Ism kiritilishi shart'), // Name is required
   phone: z.string().min(9, 'Telefon raqami kiritilishi shart'), // Phone number is required
   password: z
@@ -58,7 +59,7 @@ const addClientSchema = z.object({
   role: z.string().min(1, 'Rol tanlanishi shart'), // Role selection is required
 })
 
-type AddClientValues = z.infer<typeof addClientSchema>
+type AddCashierValues = z.infer<typeof addCashierSchema>
 
 export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
   const [showPassword, setShowPassword] = useState(false)
@@ -67,8 +68,8 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
 
   const [updateCashier] = useUpdateCashierMutation()
 
-  const form = useForm<AddClientValues>({
-    resolver: zodResolver(addClientSchema),
+  const form = useForm<AddCashierValues>({
+    resolver: zodResolver(addCashierSchema),
     defaultValues: {
       username: cashierData?.data.username || '',
       phone: cashierData?.data.phone || '',
@@ -92,7 +93,7 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
     }
   }, [cashierData, managerBranch, form])
 
-  const onSubmit = async (values: AddClientValues) => {
+  const onSubmit = async (values: AddCashierValues) => {
     try {
       const sendData = { ...values }
       if (!sendData.password) {
@@ -100,10 +101,15 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
       }
 
       await updateCashier({ id, body: sendData }).unwrap()
-      console.log('Mijoz qo‘shildi:', sendData)
+      toast.success(
+        'Muvaffaqiyat! Kassir maʼlumotlari muvaffaqiyatli yangilandi.'
+      )
       setOpen(false)
       form.reset()
     } catch (error) {
+      toast.error(
+        'Xatolik! Kassir maʼlumotlarini yangilashda xatolik yuz berdi.'
+      )
       console.error('Xato:', error)
     }
   }
@@ -202,8 +208,10 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
                   <FormLabel>Rolni Tanlang</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value} // Explicitly bind the value to the form state
+                      onValueChange={(value) => {
+                        field.onChange(value) // Update the form state
+                      }}
                     >
                       <SelectTrigger className="w-[250px]">
                         <SelectValue placeholder="Rolni tanlang" />
