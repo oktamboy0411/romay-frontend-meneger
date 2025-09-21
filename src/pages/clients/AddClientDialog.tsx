@@ -68,12 +68,15 @@ export default function AddClientDialog({ open, setOpen }: Props) {
     await handleRequest({
       request: () =>
         addClient({ ...data, branch_id: me?.branch_id._id as string }).unwrap(),
-      onSuccess: (data) => {
-        toast.success(data.msg)
+      onSuccess: () => {
+        toast.success('Muvaffaqiyat! Klient muvaffaqiyatli qo‘shildi.')
         setOpen(false)
         form.reset()
       },
-      onError: (err) => console.log(err.error.msg),
+      onError: (err) => {
+        toast.error('Xatolik! Klientni qo‘shishda xatolik yuz berdi.')
+        console.log(err.error.msg)
+      },
     })
   }
 

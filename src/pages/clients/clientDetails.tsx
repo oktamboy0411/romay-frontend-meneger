@@ -66,19 +66,34 @@ export default function ClientDetails() {
       <div className="border border-[#E4E4E7] rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
           <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Info title="Ismi" value={data?.data?.username || ''} />
+            <Info
+              title="Ismi"
+              value={data?.data?.username || 'Maʼlumot mavjud emas'}
+            />
             <Info
               title="Tug'ilgan sana"
               value={
                 data?.data?.birth_date
                   ? format(new Date(data?.data?.birth_date), 'dd.MM.yyyy')
-                  : ''
+                  : 'Maʼlumot mavjud emas'
               }
             />
-            <Info title="Filial" value={data?.data?.branch_id?.name || ''} />
-            <Info title="Phone Number" value={data?.data?.phone || ''} />
-            <Info title="Kasbi" value={data?.data?.profession || ''} />
-            <Info title="Manzili" value={data?.data?.address || ''} />
+            <Info
+              title="Filial"
+              value={data?.data?.branch_id?.name || 'Maʼlumot mavjud emas'}
+            />
+            <Info
+              title="Phone Number"
+              value={data?.data?.phone || 'Maʼlumot mavjud emas'}
+            />
+            <Info
+              title="Kasbi"
+              value={data?.data?.profession || 'Maʼlumot mavjud emas'}
+            />
+            <Info
+              title="Manzili"
+              value={data?.data?.address || 'Maʼlumot mavjud emas'}
+            />
 
             {/* qo‘shimcha maydonlar */}
             <Info title="Izoh" value={data?.data?.description || ''} />
@@ -114,9 +129,9 @@ export default function ClientDetails() {
 
           <div className="md:col-span-1">
             <div className="rounded-md border border-[#E4E4E7] p-5">
-              <div className="text-sm text-[#71717A]">Balans</div>
+              <div className="text-sm text-[#71717A]">Qarz</div>
               <div className="text-[28px] font-semibold text-rose-600">
-                {money(data?.data?.debt?.amount, 'debt')} so'm
+                {money(data?.data?.debt?.total_amount, 'debt')} so'm
               </div>
             </div>
           </div>
@@ -148,46 +163,48 @@ export default function ClientDetails() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E4E4E7]">
-            {client_items?.data?.map((o) => (
-              <tr key={o._id} className="hover:bg-[#F9F9F9]">
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div
-                    onClick={() => {
-                      setSelectedSale(o)
-                      setOpen(true)
-                    }}
-                    className="text-sm text-[#18181B] underline cursor-pointer"
-                  >
-                    {o?._id || 'N/A'}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm text-[#18181B]">
-                    {o?.created_at
-                      ? format(new Date(o.created_at), 'dd.MM.yyyy')
-                      : 'N/A'}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm text-[#18181B]">{o?.status}</div>
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm text-[#18181B]">
-                    {money(o?.payments?.total_amount)} so'm
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm text-[#18181B]">
-                    {money(o?.payments?.paid_amount)} so'm
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  <div className="text-sm">
-                    {money(o?.payments?.debt_amount, 'debt')} so'm
-                  </div>
-                </td>
-              </tr>
-            )) || (
+            {client_items?.data?.length ? (
+              client_items.data.map((o) => (
+                <tr key={o._id} className="hover:bg-[#F9F9F9]">
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div
+                      onClick={() => {
+                        setSelectedSale(o)
+                        setOpen(true)
+                      }}
+                      className="text-sm text-[#18181B] underline cursor-pointer"
+                    >
+                      {o?._id || 'N/A'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="text-sm text-[#18181B]">
+                      {o?.created_at
+                        ? format(new Date(o.created_at), 'dd.MM.yyyy')
+                        : 'N/A'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="text-sm text-[#18181B]">{o?.status}</div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="text-sm text-[#18181B]">
+                      {money(o?.payments?.total_amount)} so'm
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="text-sm text-[#18181B]">
+                      {money(o?.payments?.paid_amount)} so'm
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="text-sm">
+                      {money(o?.payments?.debt_amount, 'debt')} so'm
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                   Buyurtmalar topilmadi

@@ -15,7 +15,8 @@ export interface ClientRes {
   success: boolean
   data: {
     debt: {
-      amount: number
+      sale_amount: number
+      total_amount: number
       currency: string
     }
     _id: string

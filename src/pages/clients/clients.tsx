@@ -14,7 +14,7 @@ import { TablePagination } from '@/components/TablePagination'
 import { Input } from '@/components/ui/input'
 import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
 import UpdateClientDialog from './UpdateClientDilalog'
-import { useHandleError } from '@/hooks/use-handle-error'
+import { toast } from 'sonner'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -44,7 +44,6 @@ function Clients() {
   const [openPopover, setOpenPopover] = useState<string>('')
   const [updateClientId, setUpdateClientId] = useState<string>('')
   const [updateOpen, setUpdateOpen] = useState(false)
-  const msgError = useHandleError()
 
   const [deleteClient] = useDeleteClientMutation()
 
@@ -125,7 +124,7 @@ function Clients() {
                   Telefon raqami
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Segment</th>
-                <th className="px-6 py-3 text-left font-medium">Balans</th>
+                <th className="px-6 py-3 text-left font-medium">Qarz</th>
                 <th className="px-6 py-3 text-center font-medium">
                   Buyurtmalar soni
                 </th>
@@ -156,7 +155,7 @@ function Clients() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm">
-                      <BalanceCell value={c.balance || 0} />
+                      <BalanceCell value={c.debt.total_amount || 0} />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -181,10 +180,14 @@ function Clients() {
                       onClickDelete={async () => {
                         try {
                           await deleteClient(c._id).unwrap()
-                          console.log('Sotuvchi o‘chirildi:', c._id)
+                          toast.success(
+                            'Muvaffaqiyat! Mijoz muvaffaqiyatli o‘chirildi.'
+                          )
                         } catch (error) {
+                          toast.error(
+                            'Xatolik! Mijozni o‘chirishda xatolik yuz berdi.'
+                          )
                           console.error('Xato:', error)
-                          msgError(error)
                         }
                       }}
                     />

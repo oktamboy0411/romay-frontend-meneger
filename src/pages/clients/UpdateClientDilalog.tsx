@@ -98,12 +98,14 @@ export default function UpdateClientDialog({ open, setOpen, id }: Props) {
             branch_id: me?._id,
           },
         }).unwrap(),
-      onSuccess: (data) => {
-        toast.success(data.msg)
+      onSuccess: () => {
+        toast.success(
+          'Muvaffaqiyat! Mijoz maʼlumotlari muvaffaqiyatli yangilandi.'
+        )
         setOpen(false)
       },
-      onError: (err) => {
-        toast.error(err?.error?.msg || 'Mijozni yangilashda xatolik yuz berdi')
+      onError: () => {
+        toast.error('Xatolik! Mijozni yangilashda xatolik yuz berdi.')
       },
     })
   }
