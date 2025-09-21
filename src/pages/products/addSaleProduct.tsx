@@ -40,9 +40,11 @@ import type { SaleProductDetail } from '@/store/product-barcode/types'
 export default function AddSaleProduct({
   open,
   setOpen,
+  refetch,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  refetch?: () => void
 }) {
   const { data: getAllCategoriesData } = useGetAllCategoryQuery({})
   const [createProduct] = useCreateSaleProductMutation()
@@ -147,7 +149,6 @@ export default function AddSaleProduct({
       form.setValue('note', product.description || '')
       form.setValue('currency', product.currency || 'UZS')
       form.setValue('status', product.status || 'Active')
-      toast.success('Barcode bo‘yicha mahsulot maʼlumoti topildi')
 
       if (product.images && product.images.length > 0) {
         form.setValue('image', product.images[0]) // birinchi rasmni olayapmiz
@@ -158,8 +159,8 @@ export default function AddSaleProduct({
           sku: sku || '',
           name: '',
           category: '',
-          price: 0,
-          minQty: 0,
+          price: undefined,
+          minQty: undefined,
           image: [],
           subtitle: '',
           currency: 'UZS',
@@ -171,19 +172,9 @@ export default function AddSaleProduct({
           keepDefaultValues: false,
         }
       )
-      toast.error('Bu barcode bo‘yicha mahsulot topilmadi')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saleProductData])
-
-  interface RTKError {
-    data: {
-      error?: {
-        msg?: string
-      }
-    }
-    status?: number
-  }
 
   const isReadOnly = sku.length < 4 || !!saleProductData
   const isReadOnlyForNumbers = sku.length < 4
@@ -212,14 +203,12 @@ export default function AddSaleProduct({
 
       await createProduct(productPayload).unwrap()
 
+      toast.success('Mahsulot muvaffaqiyatli yaratildi')
       setOpen(false)
       form.reset()
-      toast.success('Mahsulot muvaffaqiyatli yaratildi')
     } catch (error) {
-      const err = error as RTKError
-      toast.error(
-        err?.data?.error?.msg || 'Mahsulotni yaratishda xatolik yuz berdi'
-      )
+      toast.error('Xatolik! Mahsulotni qo‘shishda xatolik yuz berdi.')
+      console.error('Xato:', error)
     }
   }
 
@@ -231,8 +220,8 @@ export default function AddSaleProduct({
           sku: sku || '',
           name: '',
           category: '',
-          price: 0,
-          minQty: 0,
+          price: undefined,
+          minQty: undefined,
           image: [],
           subtitle: '',
           currency: 'UZS',
@@ -241,7 +230,7 @@ export default function AddSaleProduct({
         },
         {
           keepValues: false,
-          keepDefaultValues: false,
+          keepDefaultValues: true,
         }
       )
       setBarcodeData(null)

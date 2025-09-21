@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import CreateRentProduct from './addRentProduct'
 import { useGetBranch } from '@/hooks/use-get-branch'
 import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
-import { useHandleError } from '@/hooks/use-handle-error'
 import { toast } from 'sonner'
 import { TablePagination } from '@/components/TablePagination'
 import UpdateRentProduct from './editRentProduct'
@@ -21,7 +20,6 @@ function RentPage() {
   const [page, setPage] = useState(1)
   const branch = useGetBranch()
   const [openPopover, setOpenPopover] = useState<string>('')
-  const msgError = useHandleError()
   const [deleteRentProduct] = useDeleteRentProductMutation()
   const [selectedId, setSelectedID] = useState<string>('')
   const [limit, setLimit] = useState(10)
@@ -53,6 +51,16 @@ function RentPage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedProduct(null)
+  }
+
+  const handleDeleteRentProduct = async (id: string) => {
+    try {
+      await deleteRentProduct(id).unwrap()
+      toast.success('Mahsulot muvaffaqiyatli o‘chirildi.')
+    } catch (error) {
+      toast.error('Xatolik! Mahsulotni o‘chirishda xatolik yuz berdi.')
+      console.log('Xato', error)
+    }
   }
 
   const totalPages = getAllRentsData?.page_count || 1
@@ -175,15 +183,7 @@ function RentPage() {
                         setSelectedID(rent._id)
                         setOpenUpdate(true)
                       }}
-                      onClickDelete={async () => {
-                        try {
-                          await deleteRentProduct(rent._id).unwrap()
-                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
-                      }}
+                      onClickDelete={() => handleDeleteRentProduct(rent._id)}
                     />
                   </td>
                 </tr>
@@ -252,15 +252,7 @@ function RentPage() {
                         setSelectedID(rent._id)
                         setOpenUpdate(true)
                       }}
-                      onClickDelete={async () => {
-                        try {
-                          await deleteRentProduct(rent._id).unwrap()
-                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
-                      }}
+                      onClickDelete={() => handleDeleteRentProduct(rent._id)}
                     />
                   </div>
                 </div>

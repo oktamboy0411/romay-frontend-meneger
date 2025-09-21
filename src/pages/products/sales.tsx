@@ -30,11 +30,12 @@ export default function SalePage() {
   const msgError = useHandleError()
 
   const branch = useGetBranch()
-  const { data: getAllProductsData } = useGetAllSaleProductsQuery({
-    page,
-    limit,
-    branch: (typeof branch === 'string' ? branch : branch?._id) || '',
-  })
+  const { data: getAllProductsData, refetch: refetchSaleProducts } =
+    useGetAllSaleProductsQuery({
+      page,
+      limit,
+      branch: (typeof branch === 'string' ? branch : branch?._id) || '',
+    })
   const [deleteSaleProduct] = useDeleteSaleProductMutation()
 
   const formatUsd = (value: string) => {
@@ -50,6 +51,16 @@ export default function SalePage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedProduct(null)
+  }
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteSaleProduct(productId).unwrap()
+      toast.success('Muvaffaqiyat! Mahsulot muvaffaqiyatli o‘chirildi.')
+    } catch (error) {
+      toast.error('Xatolik! Mahsulotni o‘chirishda xatolik yuz berdi.')
+      msgError(error)
+    }
   }
 
   const totalPages = getAllProductsData?.page_count || 1
@@ -180,13 +191,7 @@ export default function SalePage() {
                         setOpenUpdate(true)
                       }}
                       onClickDelete={async () => {
-                        try {
-                          await deleteSaleProduct(item._id).unwrap()
-                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
+                        handleDeleteProduct(item._id)
                       }}
                     />
                   </td>
@@ -255,13 +260,7 @@ export default function SalePage() {
                         setOpenUpdate(true)
                       }}
                       onClickDelete={async () => {
-                        try {
-                          await deleteSaleProduct(item._id).unwrap()
-                          toast.success('Mahsulot muvaffaqiyatli o‘chirildi')
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
+                        handleDeleteProduct(item._id)
                       }}
                     />
                   </div>
@@ -291,7 +290,11 @@ export default function SalePage() {
         product={selectedProduct ? selectedProduct : null}
       />
 
-      <AddSaleProduct open={openAdd} setOpen={setOpenAdd} />
+      <AddSaleProduct
+        open={openAdd}
+        setOpen={setOpenAdd}
+        refetch={() => refetchSaleProducts()}
+      />
       <UpdateSaleProduct
         open={openUpdate}
         setOpen={setOpenUpdate}

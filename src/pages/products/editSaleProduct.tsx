@@ -24,7 +24,6 @@ import {
 } from '@/store/product/product.api'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
-import { useHandleError } from '@/hooks/use-handle-error'
 
 // faqat sonni qabul qiladigan schema
 const formSchema = z.object({
@@ -48,7 +47,6 @@ export default function UpdateProductCount({
   // productni olish
   const { data, isLoading } = useGetSaleProductByIdQuery(id)
   const [updateProduct] = useUpdateSaleProductMutation()
-  const msgError = useHandleError()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -80,7 +78,8 @@ export default function UpdateProductCount({
       toast.success('Mahsulot soni yangilandi')
       setOpen(false)
     } catch (error) {
-      msgError(error)
+      toast.error('Xatolik! Mahsulot sonini yangilashda xatolik yuz berdi.')
+      console.log('Xato', error)
     }
   }
 

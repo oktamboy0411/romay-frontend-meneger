@@ -35,7 +35,6 @@ import { toast } from 'sonner'
 import { SERVER_URL } from '@/constants/server_url'
 import { getAuthToken } from '@/utils/auth'
 import type { RentProductDetail } from '@/store/product-barcode/types'
-import { useHandleError } from '@/hooks/use-handle-error'
 
 export default function CreateRentProduct({
   open,
@@ -50,7 +49,6 @@ export default function CreateRentProduct({
   const [createRentProduct] = useCreateRentProductMutation()
   const [uploadFile] = useUploadFileMutation()
   const branch = useGetBranch()
-  const msgError = useHandleError()
   const [rentProductData, setBarcodeData] = useState<RentProductDetail | null>(
     null
   )
@@ -145,7 +143,6 @@ export default function CreateRentProduct({
       if (p.images && p.images.length > 0) {
         form.setValue('image', p.images[0])
       }
-      toast.success('Barcode bo‘yicha mahsulot maʼlumoti topildi')
     } else {
       form.reset(
         {
@@ -197,7 +194,8 @@ export default function CreateRentProduct({
       form.reset()
       refetch()
     } catch (error) {
-      msgError(error)
+      toast.error('Xatolik! Ijaraga mahsulot qo‘shishda xatolik yuz berdi.')
+      console.error('Xato:', error)
     }
   }
 
@@ -206,7 +204,7 @@ export default function CreateRentProduct({
       form.reset()
       setBarcodeData(null)
     }
-  }, [open])
+  }, [open, form])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

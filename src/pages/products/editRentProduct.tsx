@@ -29,15 +29,6 @@ type FormValues = {
   product_rent_price: number | string
 }
 
-interface RTKError {
-  data?: {
-    error?: {
-      msg?: string
-    }
-  }
-  status?: number
-}
-
 export default function UpdateRentProduct({
   open,
   setOpen,
@@ -85,11 +76,8 @@ export default function UpdateRentProduct({
       toast.success('Ijaraga mahsulot muvaffaqiyatli yangilandi')
       refetch()
     } catch (error) {
-      const err = error as RTKError
-      toast.error(
-        err?.data?.error?.msg ||
-          'Ijaraga mahsulotni yangilashda xatolik yuz berdi'
-      )
+      toast.error('Ijaraga mahsulotni yangilashda xatolik yuz berdi.')
+      console.log('xato', error)
     }
   }
 
