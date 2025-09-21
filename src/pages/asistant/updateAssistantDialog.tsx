@@ -31,15 +31,20 @@ type Props = {
   id: string
 }
 
-const addClientSchema = z.object({
-  username: z.string().min(2, 'Ism kiritilishi shart'),
+const updateAssistantSchema = z.object({
+  username: z.string().min(2, "Ism kamida 2 ta harf bo'lishi kerak"),
   description: z.string().optional(),
-  phone: z.string().min(9, 'Telefon raqam kiritilishi shart'),
-  branch_id: z.string().min(1, 'Filial tanlanishi shart'),
+  phone: z
+    .string()
+    .regex(
+      /^\+998\d{9}$/,
+      'Telefon raqam +998 bilan 9 ta raqamdan iborat bo‘lishi kerak'
+    ),
+  branch_id: z.string().min(1, 'Filial tanlanishi majburiy'),
   address: z.string().optional(),
 })
 
-type AddClientValues = z.infer<typeof addClientSchema>
+type UpdateAssistantValues = z.infer<typeof updateAssistantSchema>
 
 export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
   const branch = useGetBranch()
@@ -47,8 +52,8 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
   const [updateAssistant] = useUpdateAssistantMutation()
   const { data: assistantData } = useGetOneAssistantQuery(id)
 
-  const form = useForm<AddClientValues>({
-    resolver: zodResolver(addClientSchema),
+  const form = useForm<UpdateAssistantValues>({
+    resolver: zodResolver(updateAssistantSchema),
     defaultValues: {
       username: assistantData?.data.username || '',
       description: assistantData?.data.description || '',
@@ -70,7 +75,7 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
     }
   }, [assistantData, branch, form])
 
-  const onSubmit = async (values: AddClientValues) => {
+  const onSubmit = async (values: UpdateAssistantValues) => {
     try {
       await updateAssistant({ id, body: values }).unwrap()
       toast.success('Sotuvchi muvaffaqiyatli yangilandi')
@@ -100,7 +105,7 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
               <FormItem>
                 <FormLabel>Ism</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Ahmadjon Karimov" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -115,7 +120,7 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
               <FormItem>
                 <FormLabel>Tavsif</FormLabel>
                 <FormControl>
-                  <Input placeholder="Experienced sales assistant" {...field} />
+                  <Input placeholder="Tajribali yordamchi xodim" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -145,7 +150,10 @@ export default function UpdateAssistantDialog({ open, setOpen, id }: Props) {
               <FormItem>
                 <FormLabel>Manzil</FormLabel>
                 <FormControl>
-                  <Input placeholder="Tashkent, Chilonzor" {...field} />
+                  <Input
+                    placeholder="Toshkent shahar, Chilonzor tumani"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

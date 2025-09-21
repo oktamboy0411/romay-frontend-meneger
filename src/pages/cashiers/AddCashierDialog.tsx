@@ -36,30 +36,30 @@ type Props = {
 }
 
 // Schema – faqat kerakli maydonlar
-const addClientSchema = z.object({
-  username: z.string().min(2, 'Ism kiritilishi shart'),
+const addCashierSchema = z.object({
+  username: z.string().min(2, "To'liq ism kiritilishi shart"),
   phone: z
     .string()
     .regex(
       /^\+998\d{9}$/,
       'Telefon raqam +998 bilan 9 ta raqamdan iborat bo‘lishi kerak'
     ),
-  password: z.string().min(6, 'Parol kiritilishi shart'),
+  password: z.string().min(6, "Parol kamida 6 belgidan iborat bo'lishi kerak"),
   address: z.string().optional(),
   branch_id: z.string().min(1, 'Filial tanlanishi shart'),
   role: z.string().min(1, 'Rol tanlanishi shart'),
 })
 
-type AddClientValues = z.infer<typeof addClientSchema>
+type AddCashierValues = z.infer<typeof addCashierSchema>
 
 export default function AddCashierDialog({ open, setOpen }: Props) {
   const [showPassword, setShowPassword] = useState(false)
   const managerBranch = useGetBranch()
 
-  const [addClient] = useAddCashierMutation()
+  const [addCashier] = useAddCashierMutation()
 
-  const form = useForm<AddClientValues>({
-    resolver: zodResolver(addClientSchema),
+  const form = useForm<AddCashierValues>({
+    resolver: zodResolver(addCashierSchema),
     defaultValues: {
       username: '',
       phone: '',
@@ -70,10 +70,10 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
     },
   })
 
-  const onSubmit = async (values: AddClientValues) => {
+  const onSubmit = async (values: AddCashierValues) => {
     try {
-      await addClient(values).unwrap()
-      console.log('Mijoz qo‘shildi:', values)
+      await addCashier(values).unwrap()
+      console.log('Kassir qo‘shildi:', values)
       setOpen(false)
       form.reset()
     } catch (error) {
@@ -96,9 +96,9 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fullname</FormLabel>
+                  <FormLabel>To'liq ism</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Ism va familiya" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,9 +155,9 @@ export default function AddCashierDialog({ open, setOpen }: Props) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Yashash Manzili</FormLabel>
+                  <FormLabel>Yashash manzili</FormLabel>
                   <FormControl>
-                    <Input placeholder="Tashkent, Uzbekistan" {...field} />
+                    <Input placeholder="Toshkent, O'zbekiston" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

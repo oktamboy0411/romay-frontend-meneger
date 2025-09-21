@@ -57,7 +57,7 @@ function Assistants() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               className="pl-9 w-[300px]"
-              placeholder="Xodimni izlash"
+              placeholder="Xodimni qidirish"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -77,16 +77,16 @@ function Assistants() {
           <AlertCircle className="h-12 w-12 text-red-500" />
           <p className="text-red-600 text-lg">Xatolik yuz berdi</p>
           <p className="text-gray-600">
-            Ma’lumotlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib
+            Ma'lumotlarni yuklashda xatolik yuz berdi. Iltimos, qayta urinib
             ko‘ring.
           </p>
         </div>
       ) : assistantsData.length === 0 ? (
         <div className="border border-[#E4E4E7] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="text-lg text-gray-600">Ma’lumot topilmadi</p>
+          <p className="text-lg text-gray-600">Ma'lumot topilmadi</p>
           <p className="text-gray-500">
-            Hozircha hech qanday ma’lumot mavjud emas
+            Hozircha hech qanday ma'lumot mavjud emas
           </p>
         </div>
       ) : (
@@ -94,15 +94,15 @@ function Assistants() {
           <table className="w-full">
             <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
               <tr>
-                <th className="px-6 py-3 text-left font-medium">Ismi</th>
+                <th className="px-6 py-3 text-left font-medium">Ism</th>
                 <th className="px-6 py-3 text-left font-medium">Telefon</th>
-                <th className="px-6 py-3 text-left font-medium">Tavsif</th>
+                <th className="px-6 py-3 text-left font-medium">Tavsifi</th>
                 <th className="px-6 py-3 text-left font-medium">Manzil</th>
                 <th className="px-6 py-3 text-left font-medium">
-                  Barcha Sotuvlar
+                  Jami sotuvlar
                 </th>
                 <th className="px-6 py-3 text-left font-medium">
-                  Qo'shilgan sana
+                  Qo‘shilgan sana
                 </th>
                 <th className="px-6 py-3 text-left font-medium">Amallar</th>
               </tr>

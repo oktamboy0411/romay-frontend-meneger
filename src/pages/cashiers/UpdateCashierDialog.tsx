@@ -41,18 +41,21 @@ type Props = {
 
 // Schema – faqat kerakli maydonlar
 const addClientSchema = z.object({
-  username: z.string().min(2, 'Ism kiritilishi shart'),
-  phone: z.string().min(9, 'Telefon kiritilishi shart'),
+  username: z.string().min(2, 'Ism kiritilishi shart'), // Name is required
+  phone: z.string().min(9, 'Telefon raqami kiritilishi shart'), // Phone number is required
   password: z
     .union([
-      z.string().trim().min(6, 'Parol kamida 6 ta bo‘lsin'),
+      z
+        .string()
+        .trim()
+        .min(8, 'Parol kamida 8 ta belgidan iborat bo‘lishi kerak'), // Password must be at least 8 characters
       z.literal(''),
       z.undefined(),
     ])
     .optional(),
-  address: z.string().optional(),
-  branch_id: z.string().min(1, 'Filial tanlanishi shart'),
-  role: z.string().min(1, 'Rol tanlanishi shart'),
+  address: z.string().optional(), // Address is optional
+  branch_id: z.string().min(1, 'Filial tanlanishi shart'), // Branch selection is required
+  role: z.string().min(1, 'Rol tanlanishi shart'), // Role selection is required
 })
 
 type AddClientValues = z.infer<typeof addClientSchema>
@@ -120,9 +123,9 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fullname</FormLabel>
+                  <FormLabel>To‘liq Ism</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Ism va familiya" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -134,7 +137,7 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefon</FormLabel>
+                  <FormLabel>Telefon Raqami</FormLabel>
                   <FormControl>
                     <Input placeholder="+998901234567" {...field} />
                   </FormControl>
@@ -148,12 +151,12 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parol (ixtiyoriy)</FormLabel>
+                  <FormLabel>Yangi Parol (ixtiyoriy)</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Parol kiriting"
+                        placeholder="Yangi parolni kiriting"
                         {...field}
                       />
                       <button
@@ -179,9 +182,12 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Yashash Manzili</FormLabel>
+                  <FormLabel>Manzil</FormLabel>
                   <FormControl>
-                    <Input placeholder="Tashkent, Uzbekistan" {...field} />
+                    <Input
+                      placeholder="Yashash manzilingizni kiriting"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -193,7 +199,7 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Rol</FormLabel>
+                  <FormLabel>Rolni Tanlang</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={field.onChange}
@@ -204,10 +210,10 @@ export default function UpdateCashierDialog({ open, setOpen, id }: Props) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sale_cashier">
-                          Sotuv kassiri
+                          Sotuv Kassiri
                         </SelectItem>
                         <SelectItem value="rent_cashier">
-                          Ijara kassiri
+                          Ijara Kassiri
                         </SelectItem>
                       </SelectContent>
                     </Select>

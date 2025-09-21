@@ -47,7 +47,7 @@ function Cashiers() {
       <div className="flex flex-col gap-2">
         <div className="flex gap-3 justify-between items-center">
           <h1 className="text-[30px] font-semibold text-[#09090B]">
-            Kasserlar
+            Kassirlar
           </h1>
 
           <div className="flex justify-center items-center gap-1 border border-gray-300 rounded-md p-1">
@@ -70,7 +70,7 @@ function Cashiers() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               className="pl-9 w-[300px]"
-              placeholder="kasserni izlash"
+              placeholder="Kassirni izlash"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
             />
@@ -82,7 +82,7 @@ function Cashiers() {
             className="py-5"
           >
             <Plus className="h-4 w-4" />
-            Yangi kasser qo'shish
+            Yangi kassir qo'shish
           </Button>
         </div>
       </div>
@@ -95,16 +95,16 @@ function Cashiers() {
           <AlertCircle className="h-12 w-12 text-red-500" />
           <p className="text-red-600 text-lg">Xatolik yuz berdi</p>
           <p className="text-gray-600">
-            Mijozlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib
+            Kassirlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib
             ko'ring.
           </p>
         </div>
       ) : clientsData.length === 0 ? (
         <div className="border border-[#E4E4E7] rounded-lg p-8 flex flex-col items-center justify-center space-y-4">
           <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="text-lg text-gray-600">Mijozlar topilmadi</p>
+          <p className="text-lg text-gray-600">Kassirlar topilmadi</p>
           <p className="text-gray-500">
-            Hozircha hech qanday mijoz mavjud emas
+            Hozircha hech qanday kassir mavjud emas
           </p>
         </div>
       ) : (

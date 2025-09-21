@@ -75,7 +75,7 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Sotuvchi qo'shish</DialogTitle>
-          <p className="text-sm text-gray-500">Bu yerda mijoz qo'shasiz</p>
+          <p className="text-sm text-gray-500">Bu yerda sotuvchi qo'shasiz</p>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -102,7 +102,7 @@ export default function AddAsistantDialog({ open, setOpen }: Props) {
               <FormItem>
                 <FormLabel>Tavsif</FormLabel>
                 <FormControl>
-                  <Input placeholder="Experienced sales assistant" {...field} />
+                  <Input placeholder="Tajribali sotuvchi" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
