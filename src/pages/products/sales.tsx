@@ -26,6 +26,7 @@ export default function SalePage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedId, setSelectedID] = useState<string>('')
   const [limit, setLimit] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
   const [openPopover, setOpenPopover] = useState<string>('')
   const msgError = useHandleError()
 
@@ -35,6 +36,7 @@ export default function SalePage() {
       page,
       limit,
       branch: (typeof branch === 'string' ? branch : branch?._id) || '',
+      search: searchTerm,
     })
   const [deleteSaleProduct] = useDeleteSaleProductMutation()
 
@@ -74,7 +76,12 @@ export default function SalePage() {
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input className="pl-9 w-[300px]" placeholder="mahsulotni izlash" />
+            <Input
+              className="pl-9 w-[300px]"
+              placeholder="mahsulotni izlash"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
 
