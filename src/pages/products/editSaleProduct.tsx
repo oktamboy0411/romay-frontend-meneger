@@ -34,6 +34,7 @@ const formSchema = z.object({
 })
 
 type FormValues = z.infer<typeof formSchema>
+const numberFormatter = new Intl.NumberFormat('uz-UZ')
 
 export default function UpdateProductCount({
   open,
@@ -121,7 +122,17 @@ export default function UpdateProductCount({
                 <FormItem>
                   <FormLabel>Yangi miqdor</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      placeholder="10"
+                      type="text"
+                      inputMode="numeric"
+                      value={numberFormatter.format(field.value || 0)}
+                      onChange={(e) => {
+                        // faqat raqamlarni olib tashlaymiz
+                        const raw = e.target.value.replace(/\D/g, '')
+                        field.onChange(raw) // formga raw number kiradi
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

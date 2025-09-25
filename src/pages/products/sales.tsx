@@ -38,9 +38,10 @@ export default function SalePage() {
     })
   const [deleteSaleProduct] = useDeleteSaleProductMutation()
 
-  const formatUsd = (value: string) => {
+  const formatUzs = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
-    return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    const formattedNumber = num.toLocaleString('uz-UZ')
+    return `${formattedNumber} UZS`
   }
 
   const handleProductClick = (product: Product) => {
@@ -178,7 +179,7 @@ export default function SalePage() {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatUsd((item.product.price ?? '').toString())}
+                      {formatUzs((item.product.price ?? '').toString())}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -241,7 +242,7 @@ export default function SalePage() {
                   {item.product.barcode || '—'}
                 </div>
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
-                  {formatUsd((item.product.price ?? '').toString())}
+                  {formatUzs((item.product.price ?? '').toString())}
                 </div>
                 <div className="mt-2 ">
                   <div className="flex gap-2 items-center justify-between">

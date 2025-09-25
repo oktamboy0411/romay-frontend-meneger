@@ -31,9 +31,10 @@ function RentPage() {
     branch: branch?._id,
   })
 
-  const formatUsd = (value: string) => {
+  const formatUzs = (value: string) => {
     const num = Number(String(value).replace(/[^0-9]/g, '')) || 0
-    return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    const formattedNumber = num.toLocaleString('uz-UZ')
+    return `${formattedNumber} UZS`
   }
 
   const [view, setView] = useState<'list' | 'grid'>('list')
@@ -162,7 +163,7 @@ function RentPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {rent.product_rent_price}
+                    {formatUzs((rent.product_rent_price ?? '').toString())}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
@@ -171,7 +172,7 @@ function RentPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatUsd((rent.product_rent_price || 0).toString())}
+                      {formatUzs((rent.product_rent_price || 0).toString())}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -234,7 +235,7 @@ function RentPage() {
                   {rent.product.description || rent.product.barcode || '—'}
                 </div>
                 <div className="mt-2 text-xl font-bold text-[#09090B]">
-                  {formatUsd((rent.product_rent_price || 0).toString())}
+                  {formatUzs((rent.product_rent_price || 0).toString())}
                 </div>
                 <div className="mt-2">
                   <div className="flex gap-2 items-center justify-between">

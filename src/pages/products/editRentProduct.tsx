@@ -28,7 +28,7 @@ type FormValues = {
   product_active_count: number | string
   product_rent_price: number | string
 }
-
+const numberFormatter = new Intl.NumberFormat('uz-UZ')
 export default function UpdateRentProduct({
   open,
   setOpen,
@@ -148,9 +148,16 @@ export default function UpdateRentProduct({
                         <FormLabel>Mahsulot miqdori</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="0"
+                            placeholder="10"
+                            type="text"
                             inputMode="numeric"
-                            {...field}
+                            value={numberFormatter.format(
+                              Number(field.value) || 0
+                            )}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, '')
+                              field.onChange(raw)
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -167,9 +174,16 @@ export default function UpdateRentProduct({
                         <FormLabel>Ijara narxi</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="500"
-                            inputMode="decimal"
-                            {...field}
+                            placeholder="10"
+                            type="text"
+                            inputMode="numeric"
+                            value={numberFormatter.format(
+                              Number(field.value) || 0
+                            )}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, '')
+                              field.onChange(raw)
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

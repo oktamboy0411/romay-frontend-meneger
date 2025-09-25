@@ -36,6 +36,7 @@ import { SERVER_URL } from '@/constants/server_url'
 import { getAuthToken } from '@/utils/auth'
 import type { RentProductDetail } from '@/store/product-barcode/types'
 
+const numberFormatter = new Intl.NumberFormat('uz-UZ')
 export default function CreateRentProduct({
   open,
   setOpen,
@@ -349,8 +350,14 @@ export default function CreateRentProduct({
                       <Input
                         readOnly={isReadOnly}
                         placeholder="10"
+                        type="text"
                         inputMode="numeric"
-                        {...field}
+                        value={numberFormatter.format(field.value || 0)}
+                        onChange={(e) => {
+                          // faqat raqamlarni olib tashlaymiz
+                          const raw = e.target.value.replace(/\D/g, '')
+                          field.onChange(raw) // formga raw number kiradi
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -366,12 +373,23 @@ export default function CreateRentProduct({
                   <FormItem>
                     <FormLabel>Ijara narxi</FormLabel>
                     <FormControl>
-                      <Input
-                        readOnly={isReadOnly}
-                        placeholder="500"
-                        inputMode="decimal"
-                        {...field}
-                      />
+                      <div className="relative w-full">
+                        <Input
+                          readOnly={isReadOnly}
+                          placeholder="10"
+                          type="text"
+                          inputMode="numeric"
+                          value={numberFormatter.format(field.value || 0)}
+                          onChange={(e) => {
+                            // faqat raqamlarni olib tashlaymiz
+                            const raw = e.target.value.replace(/\D/g, '')
+                            field.onChange(raw) // formga raw number kiradi
+                          }}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          UZS
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

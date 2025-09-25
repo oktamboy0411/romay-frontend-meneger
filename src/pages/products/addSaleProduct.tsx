@@ -36,6 +36,7 @@ import { toast } from 'sonner'
 import { SERVER_URL } from '@/constants/server_url'
 import { getAuthToken } from '@/utils/auth'
 import type { SaleProductDetail } from '@/store/product-barcode/types'
+const numberFormatter = new Intl.NumberFormat('uz-UZ')
 
 export default function AddSaleProduct({
   open,
@@ -379,13 +380,23 @@ export default function AddSaleProduct({
                   <FormItem>
                     <FormLabel>Narxi</FormLabel>
                     <FormControl>
-                      <Input
-                        readOnly={isReadOnlyForNumbers}
-                        placeholder="10"
-                        type="number"
-                        inputMode="decimal"
-                        {...field}
-                      />
+                      <div className="relative w-full">
+                        <Input
+                          readOnly={isReadOnlyForNumbers}
+                          placeholder="10"
+                          type="text"
+                          inputMode="decimal"
+                          value={numberFormatter.format(field.value || 0)}
+                          onChange={(e) => {
+                            // faqat raqamlarni olib tashlaymiz
+                            const raw = e.target.value.replace(/\D/g, '')
+                            field.onChange(raw) // formga raw number kiradi
+                          }}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          UZS
+                        </span>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -402,9 +413,15 @@ export default function AddSaleProduct({
                     <FormControl>
                       <Input
                         readOnly={isReadOnlyForNumbers}
-                        placeholder="0"
+                        placeholder="10"
+                        type="text"
                         inputMode="numeric"
-                        {...field}
+                        value={numberFormatter.format(field.value || 0)}
+                        onChange={(e) => {
+                          // faqat raqamlarni olib tashlaymiz
+                          const raw = e.target.value.replace(/\D/g, '')
+                          field.onChange(raw) // formga raw number kiradi
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
