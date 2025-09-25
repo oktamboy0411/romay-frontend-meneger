@@ -9,11 +9,11 @@ import { useGetSalesQuery } from '@/store/sales/sales.api' // 🔹 SALES API
 import { TableSkeleton } from '../../components/ui/table-skeleton'
 import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import SaleDetailsDialog from './AddSalesDialog'
 import type { Sale } from '@/store/sales/types'
 import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
 import { TablePagination } from '@/components/TablePagination'
+import { useGetBranch } from '@/hooks/use-get-branch'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -37,10 +37,10 @@ function BalanceCell({ value }: { value: number }) {
 
 function Sales() {
   const [cashier, setCashier] = useState('all')
-  const [branch, setBranch] = useState('all')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
+  const branch = useGetBranch()
   const [selectedSale, setSelectedSale] = useState<Sale>({
     _id: 'string',
     branch_id: { _id: 'string', name: 'string', address: 'string' },
@@ -63,7 +63,7 @@ function Sales() {
 
   const queryParams = {
     ...(cashier !== 'all' && { cashier_id: cashier }),
-    ...(branch !== 'all' && { branch_id: branch }),
+    ...(branch && { branch_id: branch._id }),
     page,
     limit,
   }
@@ -74,14 +74,8 @@ function Sales() {
     isError,
   } = useGetSalesQuery(queryParams)
 
-  const {
-    data: { data: branchesData = [] } = {},
-    isLoading: isLoadingBranches,
-    isError: isErrorBranches,
-  } = useGetAllBranchesQuery({})
-
   const cashierQueryParams = {
-    ...(branch !== 'all' && { branch_id: branch }),
+    ...(branch && { branch_id: branch._id }),
   }
 
   const {
@@ -97,29 +91,6 @@ function Sales() {
       <div className="flex justify-between items-center">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Savdolar</h1>
         <div className="flex gap-3">
-          <Select value={branch} onValueChange={setBranch}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Barcha filiallar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barchasi</SelectItem>
-              {isLoadingBranches ? (
-                <SelectItem disabled value="loading">
-                  Yuklanmoqda...
-                </SelectItem>
-              ) : isErrorBranches ? (
-                <SelectItem disabled value="error">
-                  Xatolik yuz berdi
-                </SelectItem>
-              ) : (
-                branchesData.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
           <Select value={cashier} onValueChange={setCashier}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Barcha kassalar" />
@@ -183,19 +154,18 @@ function Sales() {
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {salesData?.map((s) => (
-                <tr key={s._id} className="hover:bg-[#F9F9F9] cursor-pointer">
+                <tr
+                  key={s._id}
+                  className="hover:bg-[#F9F9F9] cursor-pointer "
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSelectedSale(s)
+                    setOpen(true)
+                  }}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-[#18181B]">
-                      <b
-                        className="hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedSale(s)
-                          setOpen(true)
-                        }}
-                      >
-                        {s.client_id?.username || "Noma'lum"}
-                      </b>
+                      {s.client_id?.username || "Noma'lum"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -382,6 +382,7 @@ export default function AddSaleProduct({
                       <Input
                         readOnly={isReadOnlyForNumbers}
                         placeholder="10"
+                        type="number"
                         inputMode="decimal"
                         {...field}
                       />

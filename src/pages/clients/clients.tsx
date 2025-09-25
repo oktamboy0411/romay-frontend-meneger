@@ -134,12 +134,13 @@ function Clients() {
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {clientsData?.map((c) => (
-                <tr key={c._id} className="hover:bg-[#F9F9F9] ">
+                <tr
+                  onClick={() => navigate(`client/${c._id}`)}
+                  key={c._id}
+                  className="hover:bg-[#F9F9F9] cursor-pointer"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div
-                      onClick={() => navigate(`client/${c._id}`)}
-                      className="text-sm font-medium text-[#18181B] cursor-pointer underline"
-                    >
+                    <div className="text-sm font-medium text-[#18181B]  ">
                       {c.username}
                     </div>
                   </td>
@@ -168,7 +169,12 @@ function Clients() {
                       {c.description || "Noma'lum"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <td
+                    onClick={(e) => {
+                      e.stopPropagation()
+                    }}
+                    className="px-6 py-4 whitespace-nowrap text-center"
+                  >
                     <EditAndDeletePopover
                       id={c._id}
                       openPopover={openPopover}
