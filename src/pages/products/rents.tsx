@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { TablePagination } from '@/components/TablePagination'
 import UpdateRentProduct from './editRentProduct'
 import ViewRentProductModal from './viewRentProduct'
+import Tooltip from '@/components/Tooltip'
 
 function RentPage() {
   const [page, setPage] = useState(1)
@@ -134,7 +135,11 @@ function RentPage() {
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {getAllRentsData?.data?.map((rent) => (
-                <tr key={rent._id} className="hover:bg-[#F9F9F9]">
+                <tr
+                  key={rent._id}
+                  onClick={() => handleProductClick(rent)}
+                  className="hover:bg-[#F9F9F9] cursor-pointer"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
                       {rent.product.images?.[0] ? (
@@ -149,12 +154,14 @@ function RentPage() {
                     </div>
                   </td>
                   <td>
-                    <div
-                      onClick={() => handleProductClick(rent)}
-                      className="text-sm font-medium text-[#18181B] underline cursor-pointer"
+                    <Tooltip
+                      title={rent.product.name}
+                      position={['top', 'left']}
                     >
-                      {rent.product.name || "Noma'lum"}
-                    </div>
+                      <span className="text-sm font-medium text-[#18181B]">
+                        {rent.product.name || "Noma'lum"}
+                      </span>
+                    </Tooltip>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
                     {rent.product.status}
@@ -182,7 +189,10 @@ function RentPage() {
                       {formatUzs((rent.product_rent_price || 0).toString())}
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                  <td
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-4 py-4 whitespace-nowrap text-center"
+                  >
                     <EditAndDeletePopover
                       id={rent._id}
                       openPopover={openPopover}

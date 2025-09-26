@@ -197,7 +197,10 @@ export default function SalePage() {
                       {formatUzs((item.product.price ?? '').toString())}
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                  <td
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-4 py-4 whitespace-nowrap text-center"
+                  >
                     <EditAndDeletePopover
                       id={item._id}
                       openPopover={openPopover}
