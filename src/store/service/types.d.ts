@@ -48,12 +48,8 @@ export interface GetAllServicesRequest {
 export interface GetAllServicesResponse {
   success: boolean
   data: Service[]
-  pagination: {
-    total: number
-    total_pages: number
-    page: number
-    limit: number
-    next_page: boolean
-    prev_page: boolean
-  }
+  page_count: number
+  current_page: number
+  next_page: number | null
+  after_filtering_count: number
 }

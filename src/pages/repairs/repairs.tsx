@@ -100,7 +100,6 @@ function MechanicsTable() {
   }
 
   const mechanics = mechanicsData?.data || []
-  const pagination = mechanicsData?.pagination
 
   const handleBranchChange = (value: string) => {
     setSelectedBranch(value)
@@ -235,16 +234,14 @@ function MechanicsTable() {
         </table>
       </div>
 
-      {pagination && (
-        <TablePagination
-          currentPage={pagination.page || 1}
-          totalPages={pagination.total_pages || 1}
-          totalItems={pagination.total || 0}
-          itemsPerPage={pagination.limit || 10}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={mechanicsData?.page_count || 1}
+        totalItems={mechanicsData?.after_filtering_count || 0}
+        itemsPerPage={pageSize}
+        onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
 
       <UpdateMechanicDialog
         id={updateMechanicId}
@@ -264,7 +261,7 @@ function ServicesTable() {
   const [selectedBranch, setSelectedBranch] = useState<string>('')
   const [selectedStatus, setSelectedStatus] = useState<ServiceStatus | ''>('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize] = useState(10)
+  const [limit, setLimit] = useState(10)
 
   // Check permissions for service/get-all - ceo, manager, rent_cashier
   const canViewServices = CheckRole(userRole, [
@@ -298,7 +295,7 @@ function ServicesTable() {
     {
       status: (selectedStatus.trim() as ServiceStatus) || undefined,
       page: currentPage,
-      limit: pageSize,
+      limit: limit,
     },
     {
       skip: !canViewServices,
@@ -312,7 +309,6 @@ function ServicesTable() {
   }
 
   const services = servicesData?.data || []
-  const pagination = servicesData?.pagination
 
   const handleBranchChange = (value: string) => {
     setSelectedBranch(value)
@@ -472,33 +468,14 @@ function ServicesTable() {
         </table>
       </div>
 
-      {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Jami {pagination.total} ta natija, {pagination.page}-sahifa{' '}
-            {pagination.total_pages} sahifadan
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={!pagination.prev_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Oldingi
-            </button>
-            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded">
-              {pagination.page}
-            </span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={!pagination.next_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Keyingi
-            </button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={servicesData?.page_count || 1}
+        totalItems={servicesData?.after_filtering_count || 0}
+        itemsPerPage={limit || 10}
+        onPageChange={(page) => setCurrentPage(page)}
+        onItemsPerPageChange={(newLimit) => setLimit(newLimit)}
+      />
     </div>
   )
 }
