@@ -151,7 +151,10 @@ export default function SalePage() {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <Tooltip title={item.product.name}>
+                    <Tooltip
+                      title={item.product.name}
+                      position={['top', 'left']}
+                    >
                       <span className="text-sm text-[#18181B]">
                         {truncateText(item.product.name, 25)}
                       </span>
