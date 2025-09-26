@@ -32,16 +32,15 @@ export default function ViewSaleProductModal({
       <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
         <div className="p-4 space-y-6">
           {/* Image */}
-          <div className="w-full h-48">
-            <img
-              src={
-                base.images?.[0] ||
-                'https://media.istockphoto.com/id/184639599/photo/power-drill-with-large-bit.jpg?s=612x612&w=0&k=20&c=TJczKvZqLmWc5c5O6r86jelaUbYFLCZnwA_uWlhHOG0='
-              }
-              alt={base.name}
-              className="w-full h-full rounded-md object-cover"
-            />
-          </div>
+          {base.images?.[0] && (
+            <div className="w-full h-48">
+              <img
+                src={base.images[0]}
+                alt={base.name}
+                className="w-full h-full rounded-md object-cover"
+              />
+            </div>
+          )}
 
           {/* Main info */}
           <div className="flex flex-col gap-2">
@@ -85,16 +84,6 @@ export default function ViewSaleProductModal({
             <p className="text-sm text-zinc-500">
               Product count (warehouse):{' '}
               <strong>{product.product_count}</strong>
-            </p>
-
-            {/* Created at */}
-            <p className="text-xs text-zinc-400">
-              Created at: {new Date(product.created_at).toLocaleString()}
-            </p>
-
-            {/* Updated at */}
-            <p className="text-xs text-zinc-400">
-              Updated at: {new Date(product.updated_at).toLocaleString()}
             </p>
 
             {/* Description */}
