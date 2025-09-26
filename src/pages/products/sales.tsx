@@ -16,6 +16,8 @@ import { toast } from 'sonner'
 import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
 import { useHandleError } from '@/hooks/use-handle-error'
 import { TablePagination } from '@/components/TablePagination'
+import { truncateText } from '@/utils/truncateText'
+import Tooltip from '@/components/Tooltip'
 
 export default function SalePage() {
   const [page, setPage] = useState(1)
@@ -130,7 +132,11 @@ export default function SalePage() {
             </thead>
             <tbody className="divide-y divide-[#E4E4E7]">
               {getAllProductsData?.data?.map((item) => (
-                <tr key={item._id} className="hover:bg-[#F9F9F9]">
+                <tr
+                  key={item._id}
+                  onClick={() => handleProductClick(item)}
+                  className="hover:bg-[#F9F9F9] cursor-pointer"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
                       {item.product.images?.[0] ? (
@@ -140,17 +146,16 @@ export default function SalePage() {
                           className="h-10 w-10 object-cover"
                         />
                       ) : (
-                        <span className="text-gray-400">📱</span>
+                        <div className="text-gray-400">📱</div>
                       )}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <div
-                      onClick={() => handleProductClick(item)}
-                      className="text-sm font-medium text-[#18181B] underline cursor-pointer"
-                    >
-                      {item.product.name}
-                    </div>
+                    <Tooltip title={item.product.name}>
+                      <span className="text-sm text-[#18181B]">
+                        {truncateText(item.product.name, 25)}
+                      </span>
+                    </Tooltip>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-left">
                     <span
