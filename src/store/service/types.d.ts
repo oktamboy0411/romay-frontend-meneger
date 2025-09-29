@@ -6,7 +6,7 @@ export interface Service {
   client_name: string
   client_phone: string
   mechanic: string
-  servicePrice: number
+  totalAmount: number
   received_date: string
   delivery_date: string
   status: ServiceStatus

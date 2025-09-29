@@ -431,7 +431,7 @@ function ServicesTable() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm text-[#18181B]">
-                      {formatPrice(service.servicePrice)} so'm
+                      {formatPrice(service.totalAmount)} so'm
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
