@@ -10,15 +10,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useGetAllRentsQuery } from '@/store/rent/rent.api'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
 import { useGetClientsQuery } from '@/store/clients/clients.api'
 import type { RentStatus } from '@/store/rent/types'
 import type { Client } from '@/types/clients'
 import { useGetRole } from '@/hooks/use-get-role'
 import { CheckRole } from '@/utils/checkRole'
 import { useNavigate } from 'react-router-dom'
+import { useGetBranch } from '@/hooks/use-get-branch'
+import { TablePagination } from '@/components/TablePagination'
 
-// Utility functions
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('uz-UZ').format(price)
 }
@@ -34,23 +34,18 @@ interface RentUsersTableProps {
 export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
   const navigate = useNavigate()
   const userRole = useGetRole()
+  const branch = useGetBranch()?._id
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
   const [selectedClient, setSelectedClient] = useState<string>('')
   const [selectedStatus, setSelectedStatus] = useState<RentStatus | '' | 'all'>(
     ''
   )
   const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
 
-  // Check permissions for rent operations
-  const canViewRents = CheckRole(userRole, ['ceo', 'manager', 'rent_cashier'])
-  const canManageRents = CheckRole(userRole, ['rent_cashier'])
-
-  const { data: branchesData } = useGetAllBranchesQuery(
-    { page: 1, limit: 100 },
-    { skip: userRole !== 'ceo' }
-  )
+  const canViewRents = CheckRole(userRole, ['manager'])
 
   const { data: clientsData } = useGetClientsQuery(
     { page: 1, limit: 100 },
@@ -63,7 +58,7 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
     error: rentsError,
   } = useGetAllRentsQuery(
     {
-      branch: selectedBranch || undefined,
+      branch: branch,
       client:
         selectedClient === 'all' ? undefined : selectedClient || undefined,
       status:
@@ -77,23 +72,11 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
 
   // Navigate to dashboard if no permission
   if (!canViewRents) {
-    navigate('/dashboard')
+    navigate('/auth/login')
     return null
   }
 
   const rents = rentsData?.data || []
-  const pagination = {
-    total: rentsData?.after_filtering_count || 0,
-    total_pages: rentsData?.page_count || 1,
-    page: rentsData?.current_page || 1,
-    next_page: rentsData?.next_page !== null,
-    prev_page: (rentsData?.current_page || 1) > 1,
-  }
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value)
-    setCurrentPage(1)
-  }
 
   const handleClientChange = (value: string) => {
     setSelectedClient(value)
@@ -121,19 +104,14 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
     )
   }
 
+  const totalPages = rentsData?.page_count || 1
+  const totalItems = rentsData?.after_filtering_count || 0
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
+        <h1 className="text-[30px] font-semibold text-[#09090B]">Ijaralar</h1>
         <div className="flex gap-4 flex-wrap">
-          {canManageRents && (
-            <Button
-              className="bg-[#3B82F6] hover:bg-[#2563EB] text-white"
-              onClick={() => navigate('/rents/add')}
-            >
-              Ijara qo'shish
-            </Button>
-          )}
-
           <Input
             placeholder="Mijoz nomi bo'yicha qidirish..."
             value={searchTerm}
@@ -152,22 +130,6 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
               <SelectItem value="CANCELLED">Bekor qilingan</SelectItem>
             </SelectContent>
           </Select>
-
-          {userRole === 'ceo' && (
-            <Select value={selectedBranch} onValueChange={handleBranchChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filialni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Barcha filiallar</SelectItem>
-                {branchesData?.data.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
 
           <Select value={selectedClient} onValueChange={handleClientChange}>
             <SelectTrigger className="w-[180px]">
@@ -275,33 +237,18 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
         </table>
       </div>
 
-      {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Jami {pagination.total} ta natija, {pagination.page}-sahifa{' '}
-            {pagination.total_pages} sahifadan
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={!pagination.prev_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Oldingi
-            </button>
-            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded">
-              {pagination.page}
-            </span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={!pagination.next_page}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Keyingi
-            </button>
-          </div>
-        </div>
-      )}
+      <TablePagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={limit}
+        onPageChange={function (page: number): void {
+          setPage(page)
+        }}
+        onItemsPerPageChange={function (itemsPerPage: number): void {
+          setLimit(itemsPerPage)
+        }}
+      />
     </div>
   )
 }

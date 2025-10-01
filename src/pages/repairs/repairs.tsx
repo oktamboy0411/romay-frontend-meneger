@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import {
   Select,
   SelectContent,
@@ -7,23 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useGetAllServicesQuery } from '@/store/service/service.api'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import {
-  useDeleteMechanicMutation,
-  useGetAllMechanicsQuery,
-} from '@/store/mechanic/mechanic.api'
 import type { ServiceStatus } from '@/store/service/types'
-import { useGetRole } from '@/hooks/use-get-role'
-import { CheckRole } from '@/utils/checkRole'
-import AddMechanicDialog from './AddMechanicDialog'
-import EditAndDeletePopover from '@/components/editAndDeletePopover/edit-and-delete-popover'
-import { useHandleError } from '@/hooks/use-handle-error'
 import { TablePagination } from '@/components/TablePagination'
-import UpdateMechanicDialog from './UpdateMechanicDialog'
+import { useGetBranch } from '@/hooks/use-get-branch'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
-// Utility functions
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('uz-UZ').format(price)
 }
@@ -32,309 +21,31 @@ const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('ru-RU')
 }
 
-// Mechanics Table Component
-function MechanicsTable() {
-  const navigate = useNavigate()
-  const userRole = useGetRole()
-  const [currentPage, setCurrentPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [pageSize] = useState(10)
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
-  const [openPopover, setOpenPopover] = useState<string>('')
-  const [updateMechanicId, setUpdateMechanicId] = useState<string>('')
-  const [updateOpen, setUpdateOpen] = useState(false)
-  const msgError = useHandleError()
-
-  const [deleteClient] = useDeleteMechanicMutation()
-
-  // Check permissions for mechanic/get-all - ceo, manager, rent_cashier
-  const canViewMechanics = CheckRole(userRole, [
-    'ceo',
-    'manager',
-    'rent_cashier',
-  ])
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const { data: branchesData, refetch: refetchBranches } =
-    useGetAllBranchesQuery(
-      {
-        page: 1,
-        limit,
-      },
-      {
-        skip: true,
-      }
-    )
-
-  const {
-    data: mechanicsData,
-    isLoading: mechanicsLoading,
-    error: mechanicsError,
-  } = useGetAllMechanicsQuery(
-    {
-      page: currentPage,
-      limit: pageSize,
-    },
-    {
-      skip: !canViewMechanics,
-    }
-  )
-  const handleItemsPerPageChange = (itemsPerPage: number) => {
-    setLimit(itemsPerPage)
-    setCurrentPage(1) // Reset to first page when items per page changes
-  }
-
-  useEffect(() => {
-    if (userRole === 'ceo') {
-      refetchBranches()
-    }
-  }, [userRole, refetchBranches])
-
-  // Navigate to dashboard if no permission
-  if (!canViewMechanics) {
-    navigate('/dashboard')
-    return null
-  }
-
-  const mechanics = mechanicsData?.data || []
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value)
-    setCurrentPage(1)
-  }
-
-  if (mechanicsLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-lg text-gray-500">Yuklanmoqda...</div>
-      </div>
-    )
-  }
-
-  if (mechanicsError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-lg text-red-500">Xatolik yuz berdi</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-4">
-          {CheckRole(userRole, ['manager']) && <AddMechanicDialog />}
-          {userRole === 'ceo' && (
-            <Select value={selectedBranch} onValueChange={handleBranchChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filialni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value=" ">Barcha filiallar</SelectItem>
-                {branchesData?.data.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      </div>
-
-      <div className="border border-[#E4E4E7] rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-[#F9F9F9] text-[#71717A] text-sm">
-            <tr>
-              <th className="px-6 py-3 text-left font-medium">To'liq ism</th>
-              <th className="px-6 py-3 text-left font-medium">Telefon raqam</th>
-              <th className="px-6 py-3 text-center font-medium">Ish turi</th>
-              <th className="px-6 py-3 text-center font-medium">Servislari</th>
-              <th className="px-6 py-3 text-center font-medium">
-                Yaratilgan sana
-              </th>
-              <th className="px-6 py-3 text-center font-medium">Amallar</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E4E4E7]">
-            {mechanics.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                  Ustalar topilmadi
-                </td>
-              </tr>
-            ) : (
-              mechanics.map((mechanic) => (
-                <tr
-                  key={mechanic._id}
-                  className={`hover:bg-[#F8F9FA] transition-colors cursor-pointer ${
-                    mechanic._id ? 'border-l-4 border-l-transparent' : ''
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-[#18181B]">
-                      {mechanic.fullName}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#18181B]">
-                      {mechanic.phone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        mechanic.work_type === 'SERVICE'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {mechanic.work_type === 'SERVICE'
-                        ? 'Xizmat'
-                        : 'Tashqi xizmati'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm text-[#18181B]">
-                      {mechanic.service_count}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="text-sm text-[#18181B]">
-                      {formatDate(mechanic.created_at)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <EditAndDeletePopover
-                      id={mechanic._id}
-                      openPopover={openPopover}
-                      setOpenPopover={setOpenPopover}
-                      onClickUpdate={() => {
-                        setUpdateMechanicId(mechanic._id)
-                        setUpdateOpen(true)
-                      }}
-                      onClickDelete={async () => {
-                        try {
-                          await deleteClient(mechanic._id).unwrap()
-                          console.log('Sotuvchi o‘chirildi:', mechanic._id)
-                        } catch (error) {
-                          console.error('Xato:', error)
-                          msgError(error)
-                        }
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={mechanicsData?.page_count || 1}
-        totalItems={mechanicsData?.after_filtering_count || 0}
-        itemsPerPage={pageSize}
-        onPageChange={handlePageChange}
-        onItemsPerPageChange={handleItemsPerPageChange}
-      />
-
-      <UpdateMechanicDialog
-        id={updateMechanicId}
-        open={updateOpen}
-        setOpen={function (open: boolean): void {
-          setUpdateOpen(open)
-        }}
-      />
-    </div>
-  )
-}
-
-// Services Table Component
-function ServicesTable() {
-  const navigate = useNavigate()
-  const userRole = useGetRole()
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
+export default function Repairs() {
   const [selectedStatus, setSelectedStatus] = useState<ServiceStatus | ''>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [limit, setLimit] = useState(10)
+  const [search, setSearch] = useState('')
 
-  // Check permissions for service/get-all - ceo, manager, rent_cashier
-  const canViewServices = CheckRole(userRole, [
-    'ceo',
-    'manager',
-    'rent_cashier',
-  ])
-
-  // CEO can see all branches, others only their own branch
-  const canViewAllBranches = CheckRole(userRole, ['ceo'])
-
-  const { data: branchesData } = useGetAllBranchesQuery(
-    {
-      page: 1,
-      limit: 100,
-    },
-    {
-      skip: !canViewAllBranches,
-    }
-  )
-
-  // Use branches data only for CEO, others use their own branch
-  const allBranches = branchesData?.data || []
-  const availableBranches = canViewAllBranches ? allBranches : []
+  const branch = useGetBranch()
 
   const {
     data: servicesData,
     isLoading: servicesLoading,
     error: servicesError,
-  } = useGetAllServicesQuery(
-    {
-      status: (selectedStatus.trim() as ServiceStatus) || undefined,
-      page: currentPage,
-      limit: limit,
-    },
-    {
-      skip: !canViewServices,
-    }
-  )
-
-  // Navigate to dashboard if no permission
-  if (!canViewServices) {
-    navigate('/dashboard')
-    return null
-  }
+  } = useGetAllServicesQuery({
+    status: (selectedStatus.trim() as ServiceStatus) || undefined,
+    page: currentPage,
+    limit: limit,
+    branch: branch?._id,
+    search,
+  })
 
   const services = servicesData?.data || []
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value)
-    setCurrentPage(1)
-  }
 
   const handleStatusChange = (value: ServiceStatus | '') => {
     setSelectedStatus(value)
     setCurrentPage(1)
-  }
-
-  // Show permission error if user doesn't have access
-  if (!canViewServices) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <div className="text-lg text-red-500 mb-4">
-            Sizda ushbu ma'lumotlarni ko'rish huquqi yo'q
-          </div>
-          <div className="text-sm text-gray-500">
-            Xizmatlarni ko'rish faqat CEO, manager va rent_cashier rollari uchun
-            ruxsat etilgan
-          </div>
-        </div>
-      </div>
-    )
   }
 
   if (servicesLoading) {
@@ -356,7 +67,19 @@ function ServicesTable() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
+        <h1 className="text-[30px] font-semibold text-[#09090B]">
+          Ta'mirlash Xizmatlari
+        </h1>
         <div className="flex gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              className="pl-9 w-[300px]"
+              placeholder="Qidirish"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <Select value={selectedStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Holatni tanlang" />
@@ -368,21 +91,6 @@ function ServicesTable() {
               <SelectItem value="CANCELLED">Bekor qilingan</SelectItem>
             </SelectContent>
           </Select>
-          {canViewAllBranches && (
-            <Select value={selectedBranch} onValueChange={handleBranchChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filialni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value=" ">Barcha filiallar</SelectItem>
-                {availableBranches.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
       </div>
 
@@ -476,65 +184,6 @@ function ServicesTable() {
         onPageChange={(page) => setCurrentPage(page)}
         onItemsPerPageChange={(newLimit) => setLimit(newLimit)}
       />
-    </div>
-  )
-}
-
-// Main Repairs Component
-export default function Repairs() {
-  const navigate = useNavigate()
-  const userRole = useGetRole()
-
-  // Check permissions
-  const canViewServices = CheckRole(userRole, [
-    'ceo',
-    'manager',
-    'rent_cashier',
-  ])
-  const canViewMechanics = CheckRole(userRole, [
-    'ceo',
-    'manager',
-    'rent_cashier',
-  ])
-
-  // If user has no permissions at all, navigate to dashboard
-  if (!canViewServices && !canViewMechanics) {
-    navigate('/dashboard')
-    return null
-  }
-
-  // Determine default tab based on permissions
-  const defaultTab = canViewServices ? 'services' : 'mechanics'
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-[30px] font-semibold text-[#09090B]">
-          Ta'mirlash Xizmatlari
-        </h1>
-      </div>
-
-      <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList
-          className={`grid w-full ${canViewServices && canViewMechanics ? 'grid-cols-2' : 'grid-cols-1'}`}
-        >
-          {canViewServices && (
-            <TabsTrigger value="services">Xizmatlar</TabsTrigger>
-          )}
-          {canViewMechanics && (
-            <TabsTrigger value="mechanics">Ustalar</TabsTrigger>
-          )}
-        </TabsList>
-        {canViewServices && (
-          <TabsContent value="services" className="space-y-4">
-            <ServicesTable />
-          </TabsContent>
-        )}
-        {canViewMechanics && (
-          <TabsContent value="mechanics" className="space-y-4">
-            <MechanicsTable />
-          </TabsContent>
-        )}
-      </Tabs>
     </div>
   )
 }
