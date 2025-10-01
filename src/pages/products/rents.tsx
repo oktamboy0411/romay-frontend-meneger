@@ -16,6 +16,7 @@ import { TablePagination } from '@/components/TablePagination'
 import UpdateRentProduct from './editRentProduct'
 import ViewRentProductModal from './viewRentProduct'
 import Tooltip from '@/components/Tooltip'
+import GetProductStatus from '@/utils/productStatus'
 
 function RentPage() {
   const [page, setPage] = useState(1)
@@ -164,7 +165,7 @@ function RentPage() {
                     </Tooltip>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    {rent.product.status}
+                    <GetProductStatus quantity={rent.product_active_count} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">

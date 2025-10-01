@@ -18,6 +18,7 @@ import { useHandleError } from '@/hooks/use-handle-error'
 import { TablePagination } from '@/components/TablePagination'
 import { truncateText } from '@/utils/truncateText'
 import Tooltip from '@/components/Tooltip'
+import GetProductStatus from '@/utils/productStatus'
 
 export default function SalePage() {
   const [page, setPage] = useState(1)
@@ -161,17 +162,7 @@ export default function SalePage() {
                     </Tooltip>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-left">
-                    <span
-                      className={
-                        'px-2 py-1 text-xs rounded-md bg-green-100 ' +
-                          item.product.status !==
-                        'active'
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                      }
-                    >
-                      {item.product.status}
-                    </span>
+                    <GetProductStatus quantity={item.product_count} />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-[#F4F4F5] text-[#18181B]">
