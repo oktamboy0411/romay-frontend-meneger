@@ -7,13 +7,14 @@ import {
 } from '@/components/ui/select'
 import { useGetSalesQuery } from '@/store/sales/sales.api' // 🔹 SALES API
 import { TableSkeleton } from '../../components/ui/table-skeleton'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Search } from 'lucide-react'
 import { useState } from 'react'
 import SaleDetailsDialog from './AddSalesDialog'
 import type { Sale } from '@/store/sales/types'
 import { useGetCashiersQuery } from '@/store/cashiers/cashiers'
 import { TablePagination } from '@/components/TablePagination'
 import { useGetBranch } from '@/hooks/use-get-branch'
+import { Input } from '@/components/ui/input'
 
 function BalanceCell({ value }: { value: number }) {
   const isZero = value === 0
@@ -41,6 +42,7 @@ function Sales() {
   const [limit, setLimit] = useState(10)
   const [open, setOpen] = useState(false)
   const branch = useGetBranch()
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedSale, setSelectedSale] = useState<Sale>({
     _id: 'string',
     branch_id: { _id: 'string', name: 'string', address: 'string' },
@@ -61,18 +63,17 @@ function Sales() {
     updated_at: '',
   })
 
-  const queryParams = {
-    ...(cashier !== 'all' && { cashier_id: cashier }),
-    ...(branch && { branch_id: branch._id }),
-    page,
-    limit,
-  }
-
   const {
     data: { data: salesData = [], pagination } = {},
     isLoading,
     isError,
-  } = useGetSalesQuery(queryParams)
+  } = useGetSalesQuery({
+    ...(cashier !== 'all' && { cashier_id: cashier }),
+    ...(branch && { branch_id: branch._id }),
+    page,
+    limit,
+    search: searchTerm,
+  })
 
   const cashierQueryParams = {
     ...(branch && { branch_id: branch._id }),
@@ -91,6 +92,15 @@ function Sales() {
       <div className="flex justify-between items-center">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Savdolar</h1>
         <div className="flex gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              className="pl-9 w-[300px]"
+              placeholder="Ijarani qidirish"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <Select value={cashier} onValueChange={setCashier}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Barcha kassalar" />

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Eye } from 'lucide-react'
+import { Eye, Search } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -112,12 +112,15 @@ export default function RentUsersTable({ onRentClick }: RentUsersTableProps) {
       <div className="flex justify-between items-center">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Ijaralar</h1>
         <div className="flex gap-4 flex-wrap">
-          <Input
-            placeholder="Mijoz nomi bo'yicha qidirish..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-[200px]"
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              className="pl-9 w-[300px]"
+              placeholder="Ijarani qidirish"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
           <Select value={selectedStatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[180px]">

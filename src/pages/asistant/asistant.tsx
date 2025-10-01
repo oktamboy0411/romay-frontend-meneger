@@ -57,7 +57,7 @@ function Assistants() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               className="pl-9 w-[300px]"
-              placeholder="Xodimni qidirish"
+              placeholder="Sotuvchi qidirish"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

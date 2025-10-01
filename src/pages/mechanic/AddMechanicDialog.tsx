@@ -89,8 +89,8 @@ export default function AddMechanicDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button>
+          <Plus className="h-5 w-5" />
           Ustala qo'shish
         </Button>
       </DialogTrigger>

@@ -6,96 +6,49 @@ import {
   useDeleteMechanicMutation,
   useGetAllMechanicsQuery,
 } from '@/store/mechanic/mechanic.api'
-import { useNavigate } from 'react-router-dom'
-import { useGetRole } from '@/hooks/use-get-role'
-import { useEffect, useState } from 'react'
-import { CheckRole } from '@/utils/checkRole'
-import { useGetAllBranchesQuery } from '@/store/branch/branch.api'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { useState } from 'react'
+
 import { TablePagination } from '@/components/TablePagination'
+import { useGetBranch } from '@/hooks/use-get-branch'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('ru-RU')
 }
 
 export default function Mechanics() {
-  const navigate = useNavigate()
-  const userRole = useGetRole()
   const [currentPage, setCurrentPage] = useState(1)
   const [limit, setLimit] = useState(10)
-  const [pageSize] = useState(10)
-  const [selectedBranch, setSelectedBranch] = useState<string>('')
+  const [search, setSearch] = useState('')
   const [openPopover, setOpenPopover] = useState<string>('')
   const [updateMechanicId, setUpdateMechanicId] = useState<string>('')
   const [updateOpen, setUpdateOpen] = useState(false)
   const msgError = useHandleError()
+  const branch = useGetBranch()
 
   const [deleteClient] = useDeleteMechanicMutation()
-
-  // Check permissions for mechanic/get-all - ceo, manager, rent_cashier
-  const canViewMechanics = CheckRole(userRole, [
-    'ceo',
-    'manager',
-    'rent_cashier',
-  ])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
 
-  const { data: branchesData, refetch: refetchBranches } =
-    useGetAllBranchesQuery(
-      {
-        page: 1,
-        limit,
-      },
-      {
-        skip: true,
-      }
-    )
-
   const {
     data: mechanicsData,
     isLoading: mechanicsLoading,
     error: mechanicsError,
-  } = useGetAllMechanicsQuery(
-    {
-      page: currentPage,
-      limit: pageSize,
-    },
-    {
-      skip: !canViewMechanics,
-    }
-  )
+  } = useGetAllMechanicsQuery({
+    page: currentPage,
+    limit: limit,
+    branch_id: branch?._id,
+    search,
+  })
   const handleItemsPerPageChange = (itemsPerPage: number) => {
     setLimit(itemsPerPage)
     setCurrentPage(1) // Reset to first page when items per page changes
   }
 
-  useEffect(() => {
-    if (userRole === 'ceo') {
-      refetchBranches()
-    }
-  }, [userRole, refetchBranches])
-
-  // Navigate to dashboard if no permission
-  if (!canViewMechanics) {
-    navigate('/dashboard')
-    return null
-  }
-
   const mechanics = mechanicsData?.data || []
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value)
-    setCurrentPage(1)
-  }
 
   if (mechanicsLoading) {
     return (
@@ -116,24 +69,17 @@ export default function Mechanics() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex gap-4">
-          {CheckRole(userRole, ['manager']) && <AddMechanicDialog />}
-          {userRole === 'ceo' && (
-            <Select value={selectedBranch} onValueChange={handleBranchChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filialni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value=" ">Barcha filiallar</SelectItem>
-                {branchesData?.data.map((branch) => (
-                  <SelectItem key={branch._id} value={branch._id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        <h1 className="text-[30px] font-semibold text-[#09090B]">Mexaniklar</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            className="pl-9 w-[400px]"
+            placeholder="Mexanikni qidirish"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <AddMechanicDialog />
       </div>
 
       <div className="border border-[#E4E4E7] rounded-lg overflow-hidden">
@@ -229,7 +175,7 @@ export default function Mechanics() {
         currentPage={currentPage}
         totalPages={mechanicsData?.page_count || 1}
         totalItems={mechanicsData?.after_filtering_count || 0}
-        itemsPerPage={pageSize}
+        itemsPerPage={limit}
         onPageChange={handlePageChange}
         onItemsPerPageChange={handleItemsPerPageChange}
       />

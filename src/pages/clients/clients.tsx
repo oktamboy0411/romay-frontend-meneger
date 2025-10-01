@@ -3,7 +3,7 @@ import {
   useDeleteClientMutation,
   useGetClientsQuery,
 } from '@/store/clients/clients.api'
-import { AlertCircle, Plus } from 'lucide-react'
+import { AlertCircle, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TableSkeleton } from '../../components/ui/table-skeleton'
@@ -79,12 +79,16 @@ function Clients() {
     <div className="space-y-6">
       <div className="flex justify-between items-center space-x-6">
         <h1 className="text-[30px] font-semibold text-[#09090B]">Mijozlar</h1>
-        <Input
-          placeholder="Ismi yoki telefon raqami bo'yicha qidiring"
-          className="pr-10 max-w-md"
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            className="pl-9 w-[400px]"
+            placeholder="Sotuvchi qidirish"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </div>
         <Button onClick={() => setOpen(true)} variant="default">
           <Plus className="h-4 w-4" />
           Mijoz qo'shish
