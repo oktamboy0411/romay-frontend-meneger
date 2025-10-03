@@ -17,6 +17,7 @@ import UpdateRentProduct from './editRentProduct'
 import ViewRentProductModal from './viewRentProduct'
 import Tooltip from '@/components/Tooltip'
 import GetProductStatus from '@/utils/productStatus'
+import { useHandleError } from '@/hooks/use-handle-error'
 
 function RentPage() {
   const [page, setPage] = useState(1)
@@ -58,12 +59,14 @@ function RentPage() {
     setSelectedProduct(null)
   }
 
+  const errorMassage = useHandleError()
+
   const handleDeleteRentProduct = async (id: string) => {
     try {
       await deleteRentProduct(id).unwrap()
       toast.success('Mahsulot muvaffaqiyatli o‘chirildi.')
     } catch (error) {
-      toast.error('Xatolik! Mahsulotni o‘chirishda xatolik yuz berdi.')
+      errorMassage(error)
       console.log('Xato', error)
     }
   }

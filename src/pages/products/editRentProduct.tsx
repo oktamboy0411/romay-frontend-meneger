@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useGetRentProductByIdQuery,
   useUpdateRentProductMutation,
@@ -41,6 +41,7 @@ export default function UpdateRentProduct({
   refetch: () => void
 }) {
   const [updateProduct] = useUpdateRentProductMutation()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data: productData, isFetching } = useGetRentProductByIdQuery(id!, {
     skip: !id,
@@ -62,9 +63,10 @@ export default function UpdateRentProduct({
         product_rent_price: p.product_rent_price ?? 0,
       })
     }
-  }, [productData])
+  }, [productData, form])
 
   const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true)
     try {
       const body: UpdateProductRequest = {
         product_count: Number(values.product_active_count),
@@ -78,6 +80,8 @@ export default function UpdateRentProduct({
     } catch (error) {
       toast.error('Ijaraga mahsulotni yangilashda xatolik yuz berdi.')
       console.log('xato', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -191,8 +195,12 @@ export default function UpdateRentProduct({
                     )}
                   />
 
-                  <Button type="submit" className="w-full">
-                    Yangilash
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Yangilanmoqda...' : 'Yangilash'}
                   </Button>
                 </form>
               </Form>

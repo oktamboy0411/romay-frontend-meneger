@@ -64,7 +64,6 @@ export default function SalePage() {
       await deleteSaleProduct(productId).unwrap()
       toast.success('Muvaffaqiyat! Mahsulot muvaffaqiyatli o‘chirildi.')
     } catch (error) {
-      toast.error('Xatolik! Mahsulotni o‘chirishda xatolik yuz berdi.')
       msgError(error)
     }
   }

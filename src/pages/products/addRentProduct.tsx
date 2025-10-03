@@ -54,6 +54,7 @@ export default function CreateRentProduct({
     null
   )
   const [barcodeLoading, setBarcodeLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 🔹 Form Schema
   const formSchema = z.object({
@@ -169,6 +170,7 @@ export default function CreateRentProduct({
 
   // 🔹 Submit
   const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true)
     try {
       let imageUrl = ''
       if (values.image && values.image instanceof File) {
@@ -197,6 +199,8 @@ export default function CreateRentProduct({
     } catch (error) {
       toast.error('Xatolik! Ijaraga mahsulot qo‘shishda xatolik yuz berdi.')
       console.error('Xato:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -415,8 +419,8 @@ export default function CreateRentProduct({
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Qo‘shish
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Qo‘shilmoqda...' : 'Qo‘shish'}
               </Button>
             </fieldset>
           </form>
