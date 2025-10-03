@@ -23,7 +23,7 @@ import {
   useUpdateSaleProductMutation,
 } from '@/store/product/product.api'
 import { toast } from 'sonner'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 // faqat sonni qabul qiladigan schema
 const formSchema = z.object({
@@ -48,6 +48,7 @@ export default function UpdateProductCount({
   // productni olish
   const { data, isLoading } = useGetSaleProductByIdQuery(id)
   const [updateProduct] = useUpdateSaleProductMutation()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,12 +62,13 @@ export default function UpdateProductCount({
     if (data?.data) {
       form.setValue('product_count', data.data.product_count || 0)
     }
-  }, [data])
+  }, [data, form])
 
   const product = data?.data?.product // BaseProduct
   const productCount = data?.data?.product_count
 
   const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true)
     try {
       await updateProduct({
         id,
@@ -81,6 +83,8 @@ export default function UpdateProductCount({
     } catch (error) {
       toast.error('Xatolik! Mahsulot sonini yangilashda xatolik yuz berdi.')
       console.log('Xato', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -138,8 +142,8 @@ export default function UpdateProductCount({
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Saqlash
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Saqlanmoqda...' : 'Saqlash'}
             </Button>
           </form>
         </Form>

@@ -53,6 +53,7 @@ export default function AddSaleProduct({
     null
   )
   const [barcodeLoading, setBarcodeLoading] = useState<boolean>(false)
+  const [loading, setLoading] = useState(false)
   const [uploadFile] = useUploadFileMutation()
   const branch = useGetBranch()
 
@@ -182,6 +183,7 @@ export default function AddSaleProduct({
 
   // 🔹 Submit
   const onSubmit = async (values: FormValues) => {
+    setLoading(true)
     try {
       let imageUrl = ''
       if (values.image && values.image instanceof File) {
@@ -211,6 +213,8 @@ export default function AddSaleProduct({
     } catch (error) {
       toast.error('Xatolik! Mahsulotni qo‘shishda xatolik yuz berdi.')
       console.error('Xato:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -448,8 +452,8 @@ export default function AddSaleProduct({
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Saqlash
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Saqlanmoqda...' : 'Saqlash'}
               </Button>
             </fieldset>
           </form>

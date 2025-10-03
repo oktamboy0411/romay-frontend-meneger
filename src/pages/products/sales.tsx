@@ -201,7 +201,7 @@ export default function SalePage() {
                         setOpenUpdate(true)
                       }}
                       onClickDelete={async () => {
-                        handleDeleteProduct(item._id)
+                        await handleDeleteProduct(item._id)
                       }}
                     />
                   </td>
@@ -270,7 +270,7 @@ export default function SalePage() {
                         setOpenUpdate(true)
                       }}
                       onClickDelete={async () => {
-                        handleDeleteProduct(item._id)
+                        await handleDeleteProduct(item._id)
                       }}
                     />
                   </div>
